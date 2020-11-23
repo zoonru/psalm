@@ -87,6 +87,7 @@ class Algebra
      */
     public static function simplifyCNF(array $clauses): array
     {
+        return $clauses;
         $cloned_clauses = [];
 
         // avoid strict duplicates
