@@ -2918,23 +2918,6 @@ class ConditionalTest extends \Psalm\Tests\TestCase
                     }',
                 'error_message' => 'RedundantCondition',
             ],
-            'nonEmptyString' => [
-                '<?php
-                    /**
-                     * @psalm-param non-empty-string $name
-                     */
-                    function sayHello(string $name) : void {
-                        echo "Hello " . $name;
-                    }
-
-                    function takeInput() : void {
-                        if (isset($_GET["name"]) && is_string($_GET["name"])) {
-                            $name = trim($_GET["name"]);
-                            sayHello($name);
-                        }
-                    }',
-                'error_message' => 'ArgumentTypeCoercion',
-            ],
             'getClassCannotBeStringEquals' => [
                 '<?php
                     function foo(Exception $e) : void {

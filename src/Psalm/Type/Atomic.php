@@ -174,14 +174,14 @@ abstract class Atomic implements TypeNode
             case 'non-empty-list':
                 return new TNonEmptyList(Type::getMixed());
 
-            case 'non-empty-string':
-                return new Type\Atomic\TNonEmptyString();
+            case 'non-falsy-string':
+                return new Type\Atomic\TNonFalsyString();
 
             case 'lowercase-string':
                 return new Type\Atomic\TLowercaseString();
 
-            case 'non-empty-lowercase-string':
-                return new Type\Atomic\TNonEmptyLowercaseString();
+            case 'non-falsy-lowercase-string':
+                return new Type\Atomic\TNonFalsyLowercaseString();
 
             case 'resource':
                 return $php_version !== null ? new TNamedObject($value) : new TResource();

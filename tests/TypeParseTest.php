@@ -952,6 +952,11 @@ class TypeParseTest extends TestCase
         $this->assertSame('int-mask-of<value-of<A::FOO>>', $docblock_type->getId());
     }
 
+    public function testNonEmptyString(): void
+    {
+        $this->assertSame('"0"|non-falsy-string', Type::parseString('non-empty-string')->getId());
+    }
+
     public function testReflectionTypeParse(): void
     {
         if (!function_exists('Psalm\Tests\someFunction')) {

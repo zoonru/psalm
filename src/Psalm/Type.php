@@ -211,7 +211,7 @@ abstract class Type
                 if (strlen($value) < $config->max_string_length) {
                     $type = new TLiteralString($value);
                 } else {
-                    $type = new Type\Atomic\TNonEmptyString();
+                    $type = new Type\Atomic\TNonFalsyString();
                 }
             }
         }

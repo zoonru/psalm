@@ -765,7 +765,7 @@ class Union implements TypeNode
     {
         return isset($this->types['string'])
             && ($this->types['string'] instanceof Atomic\TLowercaseString
-                || $this->types['string'] instanceof Atomic\TNonEmptyLowercaseString);
+                || $this->types['string'] instanceof Atomic\TNonFalsyLowercaseString);
     }
 
     public function hasLiteralClassString(): bool

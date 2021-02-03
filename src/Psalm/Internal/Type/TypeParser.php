@@ -71,8 +71,10 @@ class TypeParser
         if (count($type_tokens) === 1) {
             $only_token = $type_tokens[0];
 
-            // Note: valid identifiers can include class names or $this
-            if (!preg_match('@^(\$this|\\\\?[a-zA-Z_\x7f-\xff][\\\\\-0-9a-zA-Z_\x7f-\xff]*)$@', $only_token[0])) {
+            if ($only_token[0] === 'non-empty-string' || $only_token[0] === 'non-empty-lowercase-string') {
+                // do nothing
+                // Note: valid identifiers can include class names or $this
+            } else if (!preg_match('@^(\$this|\\\\?[a-zA-Z_\x7f-\xff][\\\\\-0-9a-zA-Z_\x7f-\xff]*)$@', $only_token[0])) {
                 if (!\is_numeric($only_token[0])
                     && strpos($only_token[0], '\'') !== false
                     && strpos($only_token[0], '"') !== false
@@ -315,6 +317,20 @@ class TypeParser
             }
 
             return new Atomic\TScalarClassConstant($fq_classlike_name, $const_name);
+        }
+
+        if ($parse_tree->value === 'non-empty-string') {
+            return new Union([
+                new TLiteralString("0"),
+                new Atomic\TNonFalsyString()
+            ]);
+        }
+
+        if ($parse_tree->value === 'non-empty-lowercase-string') {
+            return new Union([
+                new TLiteralString("0"),
+                new Atomic\TNonFalsyLowercaseString()
+            ]);
         }
 
         if (preg_match('/^\-?(0|[1-9][0-9]*)(\.[0-9]{1,})$/', $parse_tree->value)) {

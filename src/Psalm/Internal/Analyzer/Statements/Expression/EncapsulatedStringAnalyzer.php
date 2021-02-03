@@ -61,7 +61,7 @@ class EncapsulatedStringAnalyzer
         }
 
         if ($non_empty) {
-            $new_type = new Type\Union([new Type\Atomic\TNonEmptyString()]);
+            $new_type = new Type\Union([new Type\Atomic\TNonFalsyString()]);
             $new_type->parent_nodes = $stmt_type->parent_nodes;
             $stmt_type = $new_type;
         }

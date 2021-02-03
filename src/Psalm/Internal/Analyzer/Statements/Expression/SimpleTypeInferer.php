@@ -65,16 +65,16 @@ class SimpleTypeInferer
                     if ($left->isString()) {
                         $left_string_types = $left->getAtomicTypes();
                         $left_string_type = reset($left_string_types);
-                        if ($left_string_type instanceof Type\Atomic\TNonEmptyString) {
-                            return new Type\Union([new Type\Atomic\TNonEmptyString()]);
+                        if ($left_string_type instanceof Type\Atomic\TNonFalsyString) {
+                            return new Type\Union([new Type\Atomic\TNonFalsyString()]);
                         }
                     }
 
                     if ($right->isString()) {
                         $right_string_types = $right->getAtomicTypes();
                         $right_string_type = reset($right_string_types);
-                        if ($right_string_type instanceof Type\Atomic\TNonEmptyString) {
-                            return new Type\Union([new Type\Atomic\TNonEmptyString()]);
+                        if ($right_string_type instanceof Type\Atomic\TNonFalsyString) {
+                            return new Type\Union([new Type\Atomic\TNonFalsyString()]);
                         }
                     }
                 }
@@ -198,7 +198,7 @@ class SimpleTypeInferer
         if ($stmt instanceof PhpParser\Node\Scalar\MagicConst\Dir
             || $stmt instanceof PhpParser\Node\Scalar\MagicConst\File
         ) {
-            return new Type\Union([new Type\Atomic\TNonEmptyString()]);
+            return new Type\Union([new Type\Atomic\TNonFalsyString()]);
         }
 
         if ($stmt instanceof PhpParser\Node\Scalar\MagicConst\Line) {

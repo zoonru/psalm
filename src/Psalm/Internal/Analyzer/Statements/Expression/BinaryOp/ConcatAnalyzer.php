@@ -495,7 +495,7 @@ class ConcatAnalyzer
                         || ($right_type_literal_value !== null
                             && strtolower($right_type_literal_value) === $right_type_literal_value)
                     ) {
-                        $result_type = new Type\Union([new Type\Atomic\TNonEmptyLowercaseString()]);
+                        $result_type = new Type\Union([new Type\Atomic\TNonFalsyLowercaseString()]);
                     } else {
                         $result_type = new Type\Union([new Type\Atomic\TLowercaseString()]);
                     }
@@ -504,7 +504,7 @@ class ConcatAnalyzer
                     || $left_type_literal_value
                     || $right_type_literal_value
                 ) {
-                    $result_type = new Type\Union([new Type\Atomic\TNonEmptyString()]);
+                    $result_type = new Type\Union([new Type\Atomic\TNonFalsyString()]);
                 }
             }
         }
