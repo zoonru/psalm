@@ -113,6 +113,7 @@ final class Psalm
         'plugin:',
         'report:',
         'report-show-info:',
+        'reproduce:',
         'root:',
         'set-baseline:',
         'show-info:',
@@ -375,6 +376,13 @@ final class Psalm
             self::generateStubs($options, $providers, $project_analyzer);
         }
 
+        if (isset($options['reproduce']) && is_string($options['reproduce'])) {
+            IssueBuffer::reproduce(
+                $project_analyzer,
+                $options['reproduce']
+            );
+        }
+        
         if (!isset($options['i'])) {
             IssueBuffer::finish(
                 $project_analyzer,

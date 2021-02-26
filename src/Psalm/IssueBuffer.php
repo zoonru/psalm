@@ -234,10 +234,7 @@ class IssueBuffer
             fwrite(STDERR, "\nEmitting {$e->getShortLocation()} $issue_type {$e->message}\n$trace\n");
         }
 
-        $emitted_key = $issue_type
-            . '-' . $e->getShortLocation()
-            . ':' . $e->code_location->getColumn()
-            . ' ' . $e->dupe_key;
+        $emitted_key = $e->getKey();
 
         if ($reporting_level === Config::REPORT_INFO) {
             if ($is_tainted || !self::alreadyEmitted($emitted_key)) {
@@ -435,17 +432,27 @@ class IssueBuffer
     {
         foreach ($issues_data as $file_path => $file_issues) {
             foreach ($file_issues as $issue) {
-                $emitted_key = $issue->type
-                    . '-' . $issue->file_name
-                    . ':' . $issue->line_from
-                    . ':' . $issue->column_from
-                    . ' ' . $issue->dupe_key;
-
-                if (!self::alreadyEmitted($emitted_key)) {
+                if (!self::alreadyEmitted($issue->getKey())) {
                     self::$issues_data[$file_path][] = $issue;
                 }
             }
         }
+    }
+
+    public static function reproduce(
+        ProjectAnalyzer $project_analyzer,
+        string $output_path
+    ): void {
+        $emitted = self::$emitted;
+        $issueFiles = self::clear();
+        foreach ($issueFiles as $issues) {
+            foreach ($issues as $issue) {
+                $stripper = new FileStripper('report.php', $project_analyzer, $issue);
+                var_dump("Reproduce ".$issue->message." with ".$stripper->reproduce());
+            }
+        }
+        self::$issues_data = $issueFiles;
+        self::$emitted = $emitted;
     }
 
     /**
@@ -798,7 +805,7 @@ class IssueBuffer
         return $output->create();
     }
 
-    protected static function alreadyEmitted(string $message): bool
+    public static function alreadyEmitted(string $message, bool $add = true): bool
     {
         $sham = sha1($message);
 
@@ -806,7 +813,9 @@ class IssueBuffer
             return true;
         }
 
-        self::$emitted[$sham] = true;
+        if ($add) {
+            self::$emitted[$sham] = true;
+        }
 
         return false;
     }

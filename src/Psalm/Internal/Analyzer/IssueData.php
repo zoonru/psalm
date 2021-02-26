@@ -168,4 +168,18 @@ class IssueData
         $this->other_references = $other_references;
         $this->dupe_key = $dupe_key;
     }
+
+    /**
+     * Get unique issue key
+     *
+     * @return string
+     */
+    public function getKey(?string $file_name = null, ?int $line_from = null, ?int $column_from = null): string
+    {
+        return $this->type
+            . '-' . ($file_name ?? $this->file_name)
+            . ':' . ($line_from ?? $this->line_from)
+            . ':' . ($column_from ?? $this->column_from)
+            . ' ' . $this->dupe_key;
+    }
 }
