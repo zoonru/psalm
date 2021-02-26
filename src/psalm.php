@@ -103,6 +103,7 @@ $valid_long_options = [
     'plugin:',
     'report:',
     'report-show-info:',
+    'reproduce:',
     'root:',
     'set-baseline:',
     'show-info:',
@@ -818,6 +819,13 @@ if ($stubs_location) {
             $providers->classlike_storage_provider,
             $providers->file_storage_provider
         )
+    );
+}
+
+if (isset($options['reproduce']) && is_string($options['reproduce'])) {
+    IssueBuffer::reproduce(
+        $project_analyzer,
+        $options['reproduce']
     );
 }
 

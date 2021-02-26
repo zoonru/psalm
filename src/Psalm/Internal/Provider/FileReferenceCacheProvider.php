@@ -72,7 +72,8 @@ class FileReferenceCacheProvider
         $reference_cache = unserialize((string) file_get_contents($reference_cache_location));
 
         if (!is_array($reference_cache)) {
-            throw new \UnexpectedValueException('The reference cache must be an array');
+            return null;
+            //throw new \UnexpectedValueException('The reference cache must be an array');
         }
 
         return $reference_cache;

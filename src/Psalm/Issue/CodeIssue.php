@@ -86,6 +86,21 @@ abstract class CodeIssue
         return $this->message;
     }
 
+    /**
+     * Get unique issue key
+     *
+     * @return string
+     */
+    public function getKey(): string
+    {
+        $fqcn_parts = explode('\\', get_class($this));
+        $issue_type = array_pop($fqcn_parts);
+        return $issue_type
+            . '-' . $this->getShortLocation()
+            . ':' . $this->code_location->getColumn()
+            . ' ' . $this->dupe_key;
+    }
+
     public function toIssueData(string $severity = Config::REPORT_ERROR): \Psalm\Internal\Analyzer\IssueData
     {
         $location = $this->code_location;
