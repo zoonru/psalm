@@ -92,7 +92,7 @@ class FunctionLikeDocblockParser
                         ];
 
                         if (isset($line_parts[1]) && isset($line_parts[2])) {
-                            $description = substr($param, strlen($line_parts[0]) + strlen($line_parts[1]) + 2);
+                            $description = mb_strcut($param, strlen($line_parts[0]) + strlen($line_parts[1]) + 2);
                             $info_param['description'] = trim($description);
                             // Handle multiline description.
                             $info_param['description'] = preg_replace(

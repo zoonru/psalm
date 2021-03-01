@@ -49,9 +49,9 @@ class ConsoleReport extends Report
                 $selection_start = $issue_data->from - $issue_data->snippet_from;
                 $selection_length = $issue_data->to - $issue_data->from;
 
-                $issue_string .= substr($snippet, 0, $selection_start)
-                    . ($is_error ? "\e[97;41m" : "\e[30;47m") . substr($snippet, $selection_start, $selection_length)
-                    . "\e[0m" . substr($snippet, $selection_length + $selection_start) . "\n";
+                $issue_string .= mb_strcut($snippet, 0, $selection_start)
+                    . ($is_error ? "\e[97;41m" : "\e[30;47m") . mb_strcut($snippet, $selection_start, $selection_length)
+                    . "\e[0m" . mb_strcut($snippet, $selection_length + $selection_start) . "\n";
             }
         }
 
@@ -89,9 +89,9 @@ class ConsoleReport extends Report
                         $selection_start = $node_data->from - $node_data->snippet_from;
                         $selection_length = $node_data->to - $node_data->from;
 
-                        $snippets .= substr($snippet, 0, $selection_start)
-                            . "\e[30;47m" . substr($snippet, $selection_start, $selection_length)
-                            . "\e[0m" . substr($snippet, $selection_length + $selection_start) . "\n\n";
+                        $snippets .= mb_strcut($snippet, 0, $selection_start)
+                            . "\e[30;47m" . mb_strcut($snippet, $selection_start, $selection_length)
+                            . "\e[0m" . mb_strcut($snippet, $selection_length + $selection_start) . "\n\n";
                     }
                 }
             } else {
