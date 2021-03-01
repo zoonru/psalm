@@ -41,7 +41,7 @@ use Psalm\Report;
 use Psalm\Report\ReportOptions;
 use Psalm\Type;
 use Psalm\Issue\CodeIssue;
-use function substr;
+use function mb_strcut;
 use function strlen;
 use function cli_set_process_title;
 use function stream_socket_client;
@@ -374,7 +374,7 @@ class ProjectAnalyzer
 
         foreach ($report_file_paths as $report_file_path) {
             foreach ($mapping as $extension => $type) {
-                if (substr($report_file_path, -strlen($extension)) === $extension) {
+                if (mb_strcut($report_file_path, -strlen($extension)) === $extension) {
                     $o = new ReportOptions();
 
                     $o->format = $type;
@@ -684,9 +684,9 @@ class ProjectAnalyzer
                 && $destination_pos === (strlen($destination) - 1)
             ) {
                 foreach ($this->codebase->classlike_storage_provider->getAll() as $class_storage) {
-                    if (substr($class_storage->name, 0, $source_pos) === substr($source, 0, -1)) {
+                    if (mb_strcut($class_storage->name, 0, $source_pos) === mb_strcut($source, 0, -1)) {
                         $this->to_refactor[$class_storage->name]
-                            = substr($destination, 0, -1) . substr($class_storage->name, $source_pos);
+                            = mb_strcut($destination, 0, -1) . mb_strcut($class_storage->name, $source_pos);
                     }
                 }
 
@@ -822,7 +822,7 @@ class ProjectAnalyzer
 
                     $this->codebase->properties_to_move[$source_id] = $destination;
                 } else {
-                    $this->codebase->properties_to_rename[$source_id] = substr($destination_parts[1], 1);
+                    $this->codebase->properties_to_rename[$source_id] = mb_strcut($destination_parts[1], 1);
                 }
 
                 $this->codebase->property_transforms[$source_id] = $destination;
@@ -971,9 +971,9 @@ class ProjectAnalyzer
             echo $location->file_name . ':' . $location->getLineNumber() . "\n" .
                 (
                     $this->stdout_report_options->use_color
-                    ? substr($snippet, 0, $selection_start) .
-                    "\e[97;42m" . substr($snippet, $selection_start, $selection_length) .
-                    "\e[0m" . substr($snippet, $selection_length + $selection_start)
+                    ? mb_strcut($snippet, 0, $selection_start) .
+                    "\e[97;42m" . mb_strcut($snippet, $selection_start, $selection_length) .
+                    "\e[0m" . mb_strcut($snippet, $selection_length + $selection_start)
                     : $snippet
                 ) . "\n" . "\n";
         }

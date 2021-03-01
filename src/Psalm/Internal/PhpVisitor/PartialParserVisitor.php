@@ -10,6 +10,7 @@ use function strpos;
 use function strrpos;
 use function substr;
 use function substr_count;
+use function mb_strcut;
 
 /**
  * Given a list of file diffs, this scans an AST to find the sections it can replace, and parses
@@ -142,7 +143,7 @@ class PartialParserVisitor extends PhpParser\NodeVisitorAbstract
 
                         $current_line = substr_count(substr($this->b_file_contents, 0, $stmt_start_pos), "\n");
 
-                        $method_contents = substr(
+                        $method_contents = mb_strcut(
                             $this->b_file_contents,
                             $stmt_start_pos,
                             $stmt_end_pos - $stmt_start_pos + 1

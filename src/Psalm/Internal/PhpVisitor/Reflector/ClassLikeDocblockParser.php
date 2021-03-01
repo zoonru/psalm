@@ -25,7 +25,7 @@ use function reset;
 use function preg_split;
 use function array_shift;
 use function implode;
-use function substr;
+use function mb_strcut;
 use function strpos;
 use function strtolower;
 use function in_array;
@@ -283,7 +283,7 @@ class ClassLikeDocblockParser
                 $end_of_method_regex = '/(?<!array\()\) ?(\: ?(\??[\\\\a-zA-Z0-9_]+))?/';
 
                 if (preg_match($end_of_method_regex, $method_entry, $matches, PREG_OFFSET_CAPTURE)) {
-                    $method_entry = substr($method_entry, 0, (int) $matches[0][1] + strlen((string) $matches[0][0]));
+                    $method_entry = mb_strcut($method_entry, 0, (int) $matches[0][1] + strlen((string) $matches[0][0]));
                 }
 
                 $method_entry = str_replace([', ', '( '], [',', '('], $method_entry);
