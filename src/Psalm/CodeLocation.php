@@ -16,6 +16,7 @@ use function strlen;
 use function strpos;
 use function strrpos;
 use function substr_count;
+use function mb_strcut;
 use function trim;
 
 use const PREG_OFFSET_CAPTURE;
