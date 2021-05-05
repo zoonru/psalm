@@ -582,7 +582,7 @@ class FunctionReturnTypeProvider
                 $has_leftover,
                 $current,
                 $index+1,
-                $params[$paramsIndex]->is_variadic ? $paramsIndex : $paramsIndex+1,
+                $params[$paramsIndex]->is_variadic ? $paramsIndex : $paramsIndex+1
             );
         }
         if ($cur_leftover) {
