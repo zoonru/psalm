@@ -167,7 +167,7 @@ class BinaryOperationTest extends TestCase
             ],
             'numericAddition' => [
                 '<?php
-                    $a = "5";
+                    /** @var string $a */
 
                     if (is_numeric($a)) {
                         $b = $a + 4;

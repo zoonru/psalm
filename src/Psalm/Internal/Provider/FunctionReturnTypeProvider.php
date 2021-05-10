@@ -2,7 +2,6 @@
 namespace Psalm\Internal\Provider;
 
 use PhpParser;
-use PhpParser\Node\Arg;
 use Psalm\Codebase;
 use Psalm\CodeLocation;
 use Psalm\Context;
@@ -485,6 +484,7 @@ class FunctionReturnTypeProvider
                 $required <= count($type_args) &&
                 (count($type_args) <= count($callable->params) || $variadic)
             ) {
+                $maxStrLen = \Psalm\Config::getInstance()->max_string_length;
                 foreach ($this->permutateArguments(
                     $callable->params,
                     $type_args,
@@ -492,7 +492,12 @@ class FunctionReturnTypeProvider
                     $has_leftover
                 ) as $args) {
                     try {
-                        if ($function_id === 'array_combine' && count($args[0]) !== count($args[1])) {
+                        if (($function_id === 'array_combine' && count($args[0]) !== count($args[1])) ||
+                            ($function_id === 'str_repeat' && (strlen($args[0]) * $args[1]) >= $maxStrLen) ||
+                            ($function_id === 'str_pad' && $args[1] >= $maxStrLen) ||
+                            ($function_id === 'array_pad' && $args[1] > 100) ||
+                            ($function_id === 'array_fill' && $args[1] > 100)
+                        ) {
                             $has_leftover = true;
                             continue;
                         }
@@ -641,6 +646,9 @@ class FunctionReturnTypeProvider
         bool &$has_leftover
     ): array {
         $values = [];
+        if ($type->possibly_undefined) {
+            $has_leftover = true;
+        }
         foreach ($type->getAtomicTypes() as $atomic_key_type) {
             if ($atomic_key_type instanceof TLiteralString) {
                 $values []= $atomic_key_type->value;
@@ -656,8 +664,13 @@ class FunctionReturnTypeProvider
                 $values []= null;
             } elseif ($atomic_key_type instanceof TKeyedArray) {
                 $skip = false;
+                $possibly_undefined = false;
                 $array = [];
                 foreach ($atomic_key_type->properties as $key => $sub) {
+                    if ($sub->possibly_undefined) {
+                        $possibly_undefined = true;
+                        continue;
+                    }
                     $res = self::extractLiterals($sub, $skip);
                     if (count($res) !== 1) {
                         $skip = true;
@@ -667,7 +680,7 @@ class FunctionReturnTypeProvider
                 }
                 if ($skip) {
                     $has_leftover = true;
-                } else {
+                } elseif ($array || !$possibly_undefined) {
                     $values []= $array;
                 }
             } elseif ($atomic_key_type instanceof TList) {
