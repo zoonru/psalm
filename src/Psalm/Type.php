@@ -56,7 +56,6 @@ use function strtolower;
 use function substr;
 use function gettype;
 use function is_array;
-use function array_map;
 
 abstract class Type
 {
