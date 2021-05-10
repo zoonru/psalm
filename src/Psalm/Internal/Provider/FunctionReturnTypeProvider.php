@@ -13,7 +13,6 @@ use Psalm\Plugin\Hook\FunctionReturnTypeProviderInterface as LegacyFunctionRetur
 use Psalm\StatementsSource;
 use Psalm\Storage\FunctionLikeParameter;
 use Psalm\Type;
-
 use function is_subclass_of;
 use function strtolower;
 
@@ -684,6 +683,7 @@ class FunctionReturnTypeProvider
                 foreach ($atomic_key_type->properties as $key => $sub) {
                     if ($sub->possibly_undefined) {
                         $possibly_undefined = true;
+                        $has_leftover = true;
                         continue;
                     }
                     $res = self::extractLiterals($sub, $skip);
@@ -704,6 +704,10 @@ class FunctionReturnTypeProvider
                         $values[] = [$subsub];
                     }
                 }
+                if (!$atomic_key_type instanceof TNonEmptyList) {
+                    $values []= [];
+                }
+                $has_leftover = true;
             } elseif ($atomic_key_type instanceof TArray && $atomic_key_type->type_params[1]->isEmpty()) {
                 $values []= [];
             } else {
