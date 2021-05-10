@@ -2265,6 +2265,15 @@ class ArrayFunctionCallTest extends TestCase
                         }
                     }'
             ],
+            'countOnList' => [
+                '<?php
+                    /** @var list<"a"|"b"|"c"> $a */
+                    $b = count($a);
+                ',
+                'assertions' => [
+                    '$b' => 'int'
+                ]
+            ],
             'arrayColumnwithKeyedArrayWithoutRedundantUnion' => [
                 '<?php
                     /**
