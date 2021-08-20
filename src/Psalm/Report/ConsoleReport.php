@@ -5,7 +5,7 @@ use Psalm\Config;
 use Psalm\Internal\Analyzer\DataFlowNodeData;
 use Psalm\Report;
 
-use function substr;
+use function mb_strcut;
 
 class ConsoleReport extends Report
 {

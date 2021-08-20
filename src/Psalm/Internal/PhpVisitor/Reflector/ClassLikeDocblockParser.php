@@ -20,6 +20,7 @@ use function array_shift;
 use function count;
 use function implode;
 use function in_array;
+use function mb_strcut;
 use function preg_match;
 use function preg_replace;
 use function preg_split;
@@ -28,7 +29,6 @@ use function str_replace;
 use function strlen;
 use function strpos;
 use function strtolower;
-use function substr;
 use function substr_count;
 use function trim;
 

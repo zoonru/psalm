@@ -15,6 +15,7 @@ use function count;
 use function explode;
 use function implode;
 use function in_array;
+use function mb_strcut;
 use function preg_match;
 use function preg_replace;
 use function preg_split;

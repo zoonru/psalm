@@ -4,6 +4,7 @@ namespace Psalm\Internal\PhpVisitor;
 use PhpParser;
 
 use function count;
+use function mb_strcut;
 use function preg_replace;
 use function reset;
 use function strlen;
@@ -11,7 +12,6 @@ use function strpos;
 use function strrpos;
 use function substr;
 use function substr_count;
-use function mb_strcut;
 
 /**
  * Given a list of file diffs, this scans an AST to find the sections it can replace, and parses
