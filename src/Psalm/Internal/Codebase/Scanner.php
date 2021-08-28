@@ -3,6 +3,7 @@ namespace Psalm\Internal\Codebase;
 
 use Psalm\Codebase;
 use Psalm\Config;
+use Psalm\Internal\Analyzer\IssueData;
 use Psalm\Internal\ErrorHandler;
 use Psalm\Internal\Provider\ClassLikeStorageProvider;
 use Psalm\Internal\Provider\FileProvider;
