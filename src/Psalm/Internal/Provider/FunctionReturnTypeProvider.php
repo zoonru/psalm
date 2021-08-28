@@ -13,7 +13,17 @@ use Psalm\Plugin\Hook\FunctionReturnTypeProviderInterface as LegacyFunctionRetur
 use Psalm\StatementsSource;
 use Psalm\Storage\FunctionLikeParameter;
 use Psalm\Type;
+use Psalm\Type\Atomic\TArray;
+use Psalm\Type\Atomic\TFalse;
 use Psalm\Type\Union;
+use Psalm\Type\Atomic\TLiteralInt;
+use Psalm\Type\Atomic\TLiteralString;
+use Psalm\Type\Atomic\TLiteralFloat;
+use Psalm\Type\Atomic\TLiteralClassString;
+use Psalm\Type\Atomic\TTrue;
+use Psalm\Type\Atomic\TKeyedArray;
+use Psalm\Type\Atomic\TNull;
+
 use function is_subclass_of;
 use function strtolower;
 
