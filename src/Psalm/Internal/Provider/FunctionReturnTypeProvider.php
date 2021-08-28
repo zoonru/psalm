@@ -13,6 +13,7 @@ use Psalm\Plugin\Hook\FunctionReturnTypeProviderInterface as LegacyFunctionRetur
 use Psalm\StatementsSource;
 use Psalm\Storage\FunctionLikeParameter;
 use Psalm\Type;
+use Psalm\Type\Union;
 use function is_subclass_of;
 use function strtolower;
 
@@ -414,6 +415,7 @@ class FunctionReturnTypeProvider
     ): ?Type\Union {
         $codebase = $statements_source->getCodebase();
         $types = null;
+        $call_args = $stmt->args;
         if ($statements_source instanceof \Psalm\Internal\Analyzer\StatementsAnalyzer &&
             isset(self::WHITELIST[$function_id]) &&
             function_exists($function_id) &&
