@@ -927,14 +927,14 @@ class ArrayFunctionCallTest extends TestCase
                     /** @var array<empty, empty> $a */
                     $foo = array_sum($a) + 1;',
                 'assertions' => [
-                    '$foo===' => '1',
+                    '$foo===' => 'positive-int',
                 ],
             ],
             'arraySumEmptyLiteral' => [
                 '<?php
                     $foo = array_sum([]) + 1;',
                 'assertions' => [
-                    '$foo===' => '1',
+                    '$foo===' => 'positive-int',
                 ],
             ],
             'arraySumOnlyIntLiteral' => [
@@ -2293,7 +2293,7 @@ class ArrayFunctionCallTest extends TestCase
                     $b = count($a);
                 ',
                 'assertions' => [
-                    '$b' => 'int'
+                    '$b===' => '0|positive-int'
                 ]
             ],
             'arrayColumnwithKeyedArrayWithoutRedundantUnion' => [
