@@ -16,6 +16,16 @@ use Psalm\Internal\PhpVisitor\PartialParserVisitor;
 use Psalm\Internal\PhpVisitor\SimpleNameResolver;
 use Psalm\Issue\ParseError;
 use Psalm\IssueBuffer;
+use PhpParser\Node;
+use PhpParser\Node\Arg;
+use PhpParser\Node\Expr\ArrayDimFetch;
+use PhpParser\Node\Expr\BinaryOp\BooleanAnd;
+use PhpParser\Node\Expr\BooleanNot;
+use PhpParser\Node\Expr\Empty_;
+use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Expr\StaticCall;
+use PhpParser\Node\Name;
+use PhpParser\NodeVisitorAbstract;
 use Psalm\Progress\Progress;
 use Psalm\Progress\VoidProgress;
 use Throwable;
@@ -25,11 +35,13 @@ use function array_flip;
 use function array_intersect_key;
 use function array_map;
 use function array_merge;
+use function array_shift;
 use function count;
 use function filemtime;
 use function md5;
 use function strlen;
 use function strpos;
+use function strtolower;
 
 /**
  * @internal
@@ -504,6 +516,57 @@ class StatementsProvider
 
         $resolving_traverser = new PhpParser\NodeTraverser;
         $name_resolver = new SimpleNameResolver(
+            $error_handler,
+            $used_cached_statements ? $file_changes : []
+        );
+        $resolving_traverser->addVisitor($name_resolver);
+        $resolving_traverser->traverse($stmts);
+
+        $fixup_traverser = new PhpParser\NodeTraverser;
+        $fixup_resolver = new class extends NodeVisitorAbstract {
+
+            public function enterNode(Node $node)
+            {
+                if (!$node instanceof StaticCall || !$node->class instanceof Name) {
+                    return null;
+                }
+                $class = $node->class->getAttribute('resolvedName', (string)$node->class);
+                $func = $node->name->name;
+                if ($class !== \Z\packages\Helper::class || strtolower($func) !== 'isempty') {
+                    return null;
+                }
+                $args = $node->args;
+                if (count($args) < 2) {
+                    return null;
+                }
+                $var = array_shift($args);
+                $expr = [];
+                foreach ($args as $key) {
+                    $expr []= new FuncCall(
+                        new Name('array_key_exists'),
+                        [$key, $var]
+                    );
+                    $var = new Arg(
+                        new ArrayDimFetch($var->value, $key->value)
+                    );
+                }
+                $expr []= $var->value;
+                $expr []= new BooleanNot(new Empty_($var->value));
+                $prev = array_shift($expr);
+                while ($expr) {
+                    $prev = new BooleanAnd($prev, array_shift($expr));
+                }
+                return new BooleanNot(
+                    $prev
+                );
+            }
+        };
+        $fixup_traverser->addVisitor($fixup_resolver);
+        $fixup_traverser->traverse($stmts);
+
+
+        $resolving_traverser = new PhpParser\NodeTraverser;
+        $name_resolver = new \Psalm\Internal\PhpVisitor\SimpleNameResolver(
             $error_handler,
             $used_cached_statements ? $file_changes : []
         );
