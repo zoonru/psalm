@@ -129,13 +129,13 @@ class AssignmentAnalyzer
             $template_type_map = $statements_analyzer->getTemplateTypeMap();
 
             try {
-                $var_comments = CommentAnalyzer::getTypeFromComment(
+                $var_comments = []; /* CommentAnalyzer::getTypeFromComment(
                     $doc_comment,
                     $statements_analyzer->getSource(),
                     $statements_analyzer->getAliases(),
                     $template_type_map,
                     $file_storage->type_aliases
-                );
+                );*/
             } catch (IncorrectDocblockException $e) {
                 if (IssueBuffer::accepts(
                     new MissingDocblockType(
