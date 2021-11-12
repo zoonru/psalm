@@ -446,14 +446,14 @@ class StatementsAnalyzer extends SourceAnalyzer
                 $var_comments = [];
 
                 try {
-                    $var_comments = CommentAnalyzer::arrayToDocblocks(
+                    /*$var_comments = CommentAnalyzer::arrayToDocblocks(
                         $docblock,
                         $statements_analyzer->parsed_docblock,
                         $statements_analyzer->getSource(),
                         $statements_analyzer->getAliases(),
                         $template_type_map,
                         $file_storage->type_aliases
-                    );
+                    );*/
                 } catch (\Psalm\Exception\IncorrectDocblockException $e) {
                     if (IssueBuffer::accepts(
                         new MissingDocblockType(
@@ -474,7 +474,7 @@ class StatementsAnalyzer extends SourceAnalyzer
                     }
                 }
 
-                foreach ($var_comments as $var_comment) {
+                /*foreach ($var_comments as $var_comment) {
                     AssignmentAnalyzer::assignTypeFromVarDocblock(
                         $statements_analyzer,
                         $stmt,
@@ -488,7 +488,7 @@ class StatementsAnalyzer extends SourceAnalyzer
                     ) {
                         $statements_analyzer->setFQCLN((string)$var_comment->type);
                     }
-                }
+                }*/
             }
         } else {
             $statements_analyzer->parsed_docblock = null;
