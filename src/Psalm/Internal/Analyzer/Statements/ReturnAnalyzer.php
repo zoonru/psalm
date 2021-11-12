@@ -74,14 +74,14 @@ class ReturnAnalyzer
             $file_storage = $file_storage_provider->get($statements_analyzer->getFilePath());
 
             try {
-                $var_comments = CommentAnalyzer::arrayToDocblocks(
+                $var_comments = []; /*CommentAnalyzer::arrayToDocblocks(
                     $doc_comment,
                     $parsed_docblock,
                     $statements_analyzer->getSource(),
                     $statements_analyzer->getAliases(),
                     $statements_analyzer->getTemplateTypeMap(),
                     $file_storage->type_aliases
-                );
+                );*/
             } catch (DocblockParseException $e) {
                 IssueBuffer::maybeAdd(
                     new InvalidDocblock(
