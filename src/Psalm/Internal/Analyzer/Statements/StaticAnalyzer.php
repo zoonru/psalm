@@ -50,13 +50,13 @@ class StaticAnalyzer
                 $var_comments = [];
 
                 try {
-                    $var_comments = CommentAnalyzer::arrayToDocblocks(
+                    $var_comments = []; /*CommentAnalyzer::arrayToDocblocks(
                         $doc_comment,
                         $parsed_docblock,
                         $statements_analyzer->getSource(),
                         $statements_analyzer->getSource()->getAliases(),
                         $statements_analyzer->getSource()->getTemplateTypeMap()
-                    );
+                    );*/
                 } catch (\Psalm\Exception\IncorrectDocblockException $e) {
                     if (IssueBuffer::accepts(
                         new \Psalm\Issue\MissingDocblockType(
