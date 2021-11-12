@@ -208,7 +208,7 @@ class CommentAnalyzer
             $var_comments[] = $var_comment;
         }
 
-        return []; // $var_comments;
+        return $var_comments;
     }
 
     private static function decorateVarDocblockComment(
