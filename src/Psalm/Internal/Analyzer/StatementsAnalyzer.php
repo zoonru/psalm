@@ -16,7 +16,6 @@ use Psalm\Internal\Analyzer\Statements\Block\SwitchAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Block\TryAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Block\WhileAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Expression\Assignment\InstancePropertyAssignmentAnalyzer;
-use Psalm\Internal\Analyzer\Statements\Expression\AssignmentAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Expression\Fetch\ClassConstFetchAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Expression\Fetch\ConstFetchAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Expression\Fetch\VariableFetchAnalyzer;

@@ -5,7 +5,6 @@ use PhpParser;
 use Psalm\CodeLocation;
 use Psalm\Context;
 use Psalm\Exception\DocblockParseException;
-use Psalm\Internal\Analyzer\CommentAnalyzer;
 use Psalm\Internal\Analyzer\StatementsAnalyzer;
 use Psalm\Internal\Type\Comparator\UnionTypeComparator;
 use Psalm\Issue\InvalidDocblock;

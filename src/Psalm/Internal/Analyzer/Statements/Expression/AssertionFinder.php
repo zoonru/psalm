@@ -18,6 +18,7 @@ use Psalm\Codebase;
 use Psalm\FileSource;
 use Psalm\Internal\Analyzer\ClassLikeAnalyzer;
 use Psalm\Internal\Analyzer\ClassLikeNameOptions;
+use Psalm\Internal\Analyzer\Statements\Expression\Fetch\ArrayFetchAnalyzer;
 use Psalm\Internal\Analyzer\StatementsAnalyzer;
 use Psalm\Internal\Provider\ClassLikeStorageProvider;
 use Psalm\Internal\Provider\NodeDataProvider;
@@ -3650,6 +3651,17 @@ class AssertionFinder
         FileSource $source,
         ?string $this_class_name
     ): array {
+        if ($first_var_type
+            && $source instanceof StatementsAnalyzer
+            && ($second_var_type = $source->node_data->getType($expr->getArgs()[1]->value))
+        ) {
+            ArrayFetchAnalyzer::validateArrayOffset(
+                $source,
+                $expr,
+                $second_var_type,
+                $first_var_type
+            );
+        }
         $if_types = [];
 
         $literal_assertions = [];
