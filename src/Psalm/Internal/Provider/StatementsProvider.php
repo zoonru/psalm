@@ -531,8 +531,8 @@ class StatementsProvider
                     return null;
                 }
                 $class = $node->class->getAttribute('resolvedName', (string)$node->class);
-                $func = $node->name->name;
-                if ($class !== \Z\packages\Helper::class || strtolower($func) !== 'isempty') {
+                $func = strtolower($node->name->name);
+                if ($class !== \Z\packages\Helper::class || !($func === 'isempty' || $func === 'iskeyexists')) {
                     return null;
                 }
                 $args = $node->args;
@@ -550,15 +550,17 @@ class StatementsProvider
                         new ArrayDimFetch($var->value, $key->value)
                     );
                 }
-                $expr []= $var->value;
-                $expr []= new BooleanNot(new Empty_($var->value));
+                if ($func === 'isempty') {
+                    $expr []= $var->value;
+                    $expr []= new BooleanNot(new Empty_($var->value));
+                }
                 $prev = array_shift($expr);
                 while ($expr) {
                     $prev = new BooleanAnd($prev, array_shift($expr));
                 }
-                return new BooleanNot(
+                return $func === 'isempty' ? new BooleanNot(
                     $prev
-                );
+                ) : $prev;
             }
         };
         $fixup_traverser->addVisitor($fixup_resolver);
