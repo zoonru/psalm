@@ -516,13 +516,15 @@ class ArrayFetchAnalyzer
             }
         }
 
-        self::validateArrayOffset(
-            $statements_analyzer,
-            $stmt,
-            $array_type,
-            $offset_type
-        );
-
+        if (!$in_assignment) {
+            self::validateArrayOffset(
+                $statements_analyzer,
+                $stmt,
+                $array_type,
+                $offset_type
+            );
+        }
+        
         if ($offset_type->isNullable() && !$context->inside_isset) {
             if (!$offset_type->ignore_nullable_issues) {
                 IssueBuffer::maybeAdd(
