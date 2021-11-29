@@ -116,7 +116,7 @@ class ConsoleReport extends Report
     {
         $reference = $data->file_name . ':' . $data->line_from . ':' . $data->column_from;
 
-        if (!$this->use_color) {
+        if (!$this->use_color || true) {
             return $reference;
         }
 
