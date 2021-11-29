@@ -364,7 +364,7 @@ class NamedFunctionCallHandler
             return;
         }
 
-        if ($first_arg && $function_id === 'array_values') {
+        if ($first_arg && ($function_id === 'array_values' || $function_id === 'ksort')) {
             $first_arg_type = $statements_analyzer->node_data->getType($first_arg->value);
 
             if ($first_arg_type
@@ -377,7 +377,7 @@ class NamedFunctionCallHandler
                 if ($first_arg_type->from_docblock) {
                     if (IssueBuffer::accepts(
                         new \Psalm\Issue\RedundantCastGivenDocblockType(
-                            'The call to array_values is unnecessary given the list docblock type '.$first_arg_type,
+                            "The call to $function_id is unnecessary given the list docblock type $first_arg_type",
                             new CodeLocation($statements_analyzer, $function_name)
                         ),
                         $statements_analyzer->getSuppressedIssues()
@@ -387,7 +387,7 @@ class NamedFunctionCallHandler
                 } else {
                     if (IssueBuffer::accepts(
                         new \Psalm\Issue\RedundantCast(
-                            'The call to array_values is unnecessary, '.$first_arg_type.' is already a list',
+                            "The call to $function_id is unnecessary, $first_arg_type is already a list",
                             new CodeLocation($statements_analyzer, $function_name)
                         ),
                         $statements_analyzer->getSuppressedIssues()
