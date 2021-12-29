@@ -4,7 +4,17 @@ namespace Psalm\Internal\Provider;
 
 use PhpParser;
 use PhpParser\ErrorHandler\Collecting;
+use PhpParser\Node;
+use PhpParser\Node\Arg;
+use PhpParser\Node\Expr\ArrayDimFetch;
+use PhpParser\Node\Expr\BinaryOp\BooleanAnd;
+use PhpParser\Node\Expr\BooleanNot;
+use PhpParser\Node\Expr\Empty_;
+use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Expr\StaticCall;
+use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
+use PhpParser\NodeVisitorAbstract;
 use Psalm\CodeLocation\ParseErrorLocation;
 use Psalm\Config;
 use Psalm\Internal\Diff\FileDiffer;
@@ -15,19 +25,10 @@ use Psalm\Internal\PhpVisitor\PartialParserVisitor;
 use Psalm\Internal\PhpVisitor\SimpleNameResolver;
 use Psalm\Issue\ParseError;
 use Psalm\IssueBuffer;
-use PhpParser\Node;
-use PhpParser\Node\Arg;
-use PhpParser\Node\Expr\ArrayDimFetch;
-use PhpParser\Node\Expr\BinaryOp\BooleanAnd;
-use PhpParser\Node\Expr\BooleanNot;
-use PhpParser\Node\Expr\Empty_;
-use PhpParser\Node\Expr\FuncCall;
-use PhpParser\Node\Expr\StaticCall;
-use PhpParser\Node\Name;
-use PhpParser\NodeVisitorAbstract;
 use Psalm\Progress\Progress;
 use Psalm\Progress\VoidProgress;
 use Throwable;
+use Z\packages\Helper;
 
 use function abs;
 use function array_flip;
@@ -532,7 +533,7 @@ class StatementsProvider
                 }
                 $class = $node->class->getAttribute('resolvedName', (string)$node->class);
                 $func = strtolower($node->name->name);
-                if ($class !== \Z\packages\Helper::class || !($func === 'isempty' || $func === 'iskeyexists')) {
+                if ($class !== Helper::class || !($func === 'isempty' || $func === 'iskeyexists')) {
                     return null;
                 }
                 $args = $node->args;
@@ -568,7 +569,7 @@ class StatementsProvider
 
 
         $resolving_traverser = new PhpParser\NodeTraverser;
-        $name_resolver = new \Psalm\Internal\PhpVisitor\SimpleNameResolver(
+        $name_resolver = new SimpleNameResolver(
             $error_handler,
             $used_cached_statements ? $file_changes : []
         );
