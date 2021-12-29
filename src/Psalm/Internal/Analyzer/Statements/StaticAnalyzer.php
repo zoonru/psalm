@@ -8,7 +8,6 @@ use Psalm\CodeLocation\DocblockTypeLocation;
 use Psalm\Context;
 use Psalm\Exception\DocblockParseException;
 use Psalm\Exception\IncorrectDocblockException;
-use Psalm\Internal\Analyzer\CommentAnalyzer;
 use Psalm\Internal\Analyzer\StatementsAnalyzer;
 use Psalm\Internal\ReferenceConstraint;
 use Psalm\Internal\Type\Comparator\UnionTypeComparator;
