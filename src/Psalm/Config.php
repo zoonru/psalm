@@ -1685,6 +1685,10 @@ class Config
             return 'RedundantCondition';
         }
 
+        if ($issue_type === 'RedundantFunctionCallGivenDocblockType') {
+            return 'RedundantFunctionCall';
+        }
+
         if ($issue_type === 'RedundantCastGivenDocblockType') {
             return 'RedundantCast';
         }
