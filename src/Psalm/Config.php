@@ -347,6 +347,11 @@ class Config
     /**
      * @var bool
      */
+    public $seal_all_properties = false;
+
+    /**
+     * @var bool
+     */
     public $memoize_method_calls = false;
 
     /**
@@ -910,6 +915,7 @@ class Config
             'reportMixedIssues' => 'show_mixed_issues',
             'skipChecksOnUnresolvableIncludes' => 'skip_checks_on_unresolvable_includes',
             'sealAllMethods' => 'seal_all_methods',
+            'sealAllProperties' => 'seal_all_properties',
             'runTaintAnalysis' => 'run_taint_analysis',
             'usePhpStormMetaPath' => 'use_phpstorm_meta_path',
             'allowInternalNamedArgumentsCalls' => 'allow_internal_named_arg_calls',
