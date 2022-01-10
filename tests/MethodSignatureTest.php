@@ -1587,6 +1587,19 @@ class MethodSignatureTest extends TestCase
                 false,
                 '8.0'
             ],
+            'noTypehintInNativeDescendant' => [
+                '<?php
+                    class a implements JsonSerializable {
+                        public function jsonSerialize() {
+                            return 0;
+                        }
+                    }
+                ',
+                'error_message' => 'MethodSignatureMismatch',
+                [],
+                false,
+                '8.1'
+            ],
         ];
     }
 }
