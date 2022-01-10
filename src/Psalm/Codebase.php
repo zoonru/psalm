@@ -1888,8 +1888,7 @@ class Codebase
     public function shouldSealAllProperties(ClassLikeStorage $storage): bool
     {
         return $storage->sealed_properties
-            || $this->config->seal_all_properties
-            || ($this->php_major_version >= 8 && $this->php_minor_version >= 2);
+            || $this->config->seal_all_properties;
     }
 
     /**
