@@ -303,7 +303,7 @@ class UnionTypeComparator
         Union $container_type
     ): bool {
         if ($container_type->isMixed()) {
-            return !!$input_type;
+            return true;
         }
 
         if (!$input_type) {
