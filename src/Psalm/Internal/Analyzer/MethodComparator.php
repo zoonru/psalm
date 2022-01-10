@@ -119,12 +119,15 @@ class MethodComparator
         if (!$guide_classlike_storage->user_defined
             && $implementer_classlike_storage->user_defined
             && $codebase->analysis_php_version_id >= 8_01_00
+            && ($guide_method_storage->return_type
+                || $guide_method_storage->signature_return_type
+            )
             && !$implementer_method_storage->signature_return_type
         ) {
             IssueBuffer::maybeAdd(
                 new MethodSignatureMismatch(
                     'Method ' . $cased_implementer_method_id . ' is missing a return type signature!',
-                    $implementer_method_storage->location
+                    $implementer_method_storage->location ?: $code_location
                 ),
                 $suppressed_issues + $implementer_classlike_storage->suppressed_issues
             );
@@ -529,20 +532,6 @@ class MethodComparator
                         )
                         ? $implementer_param->location
                         : $code_location
-                ),
-                $suppressed_issues + $implementer_classlike_storage->suppressed_issues
-            );
-        }
-
-        if (!$guide_classlike_storage->user_defined
-            && $implementer_classlike_storage->user_defined
-            && $codebase->analysis_php_version_id >= 8_01_00
-            && !$implementer_param->signature_type
-        ) {
-            IssueBuffer::maybeAdd(
-                new MethodSignatureMismatch(
-                    'Argument ' . ($i + 1) . ' of ' . $cased_implementer_method_id . ' is missing a type signature!',
-                    $implementer_param->location
                 ),
                 $suppressed_issues + $implementer_classlike_storage->suppressed_issues
             );
