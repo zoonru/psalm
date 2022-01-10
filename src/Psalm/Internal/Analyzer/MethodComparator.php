@@ -27,6 +27,7 @@ use Psalm\Issue\OverriddenMethodAccess;
 use Psalm\Issue\ParamNameMismatch;
 use Psalm\Issue\TraitMethodSignatureMismatch;
 use Psalm\IssueBuffer;
+use Psalm\Storage\AttributeStorage;
 use Psalm\Storage\ClassLikeStorage;
 use Psalm\Storage\FunctionLikeParameter;
 use Psalm\Storage\MethodStorage;
@@ -35,6 +36,7 @@ use Psalm\Type\Atomic\TNull;
 use Psalm\Type\Atomic\TTemplateParam;
 use Psalm\Type\Union;
 
+use function array_filter;
 use function in_array;
 use function strpos;
 use function strtolower;
@@ -123,6 +125,10 @@ class MethodComparator
                 || $guide_method_storage->signature_return_type
             )
             && !$implementer_method_storage->signature_return_type
+            && !array_filter(
+                $implementer_method_storage->attributes,
+                fn (AttributeStorage $s) => $s->fq_class_name === 'ReturnTypeWillChange'
+            )
         ) {
             IssueBuffer::maybeAdd(
                 new MethodSignatureMismatch(
@@ -878,7 +884,11 @@ class MethodComparator
                 $implementer_signature_return_type,
                 $guide_signature_return_type
             )
-            : UnionTypeComparator::isContainedByInPhp($implementer_signature_return_type, $guide_signature_return_type);
+            : (!$implementer_signature_return_type
+                && $guide_signature_return_type->isMixed()
+                ? false
+                : UnionTypeComparator::isContainedByInPhp($implementer_signature_return_type, $guide_signature_return_type)
+            );
 
         if (!$is_contained_by) {
             if ($codebase->analysis_php_version_id >= 8_00_00
