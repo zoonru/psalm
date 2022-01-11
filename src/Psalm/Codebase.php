@@ -1883,15 +1883,6 @@ class Codebase
     }
 
     /**
-     * Returns whether all properties of a class should be sealed.
-     */
-    public function shouldSealAllProperties(ClassLikeStorage $storage): bool
-    {
-        return $storage->sealed_properties
-            || $this->config->seal_all_properties;
-    }
-
-    /**
      * Checks if type has any part that is a subtype of other
      *
      * Given two types, checks if *any part* of `$input_type` is a subtype of `$container_type`.
