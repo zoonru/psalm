@@ -1043,7 +1043,7 @@ class ArgumentAnalyzer
                 IssueBuffer::maybeAdd(
                     new InvalidArgument(
                         'Argument ' . ($argument_offset + 1) . $method_identifier . ' expects ' . $param_type->getId() .
-                            ', ' . $type . ' provided',
+                            ', however ' . $type . ' was provided',
                         $arg_location,
                         $cased_method_id
                     ),

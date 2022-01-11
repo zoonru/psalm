@@ -22,7 +22,6 @@ use Psalm\Internal\Analyzer\Statements\BreakAnalyzer;
 use Psalm\Internal\Analyzer\Statements\ContinueAnalyzer;
 use Psalm\Internal\Analyzer\Statements\EchoAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Expression\Assignment\InstancePropertyAssignmentAnalyzer;
-use Psalm\Internal\Analyzer\Statements\Expression\AssignmentAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Expression\Fetch\ClassConstFetchAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Expression\Fetch\ConstFetchAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Expression\Fetch\VariableFetchAnalyzer;
@@ -468,7 +467,7 @@ class StatementsAnalyzer extends SourceAnalyzer
                     );
                 }
 
-                foreach ($var_comments as $var_comment) {
+                /*foreach ($var_comments as $var_comment) {
                     AssignmentAnalyzer::assignTypeFromVarDocblock(
                         $statements_analyzer,
                         $stmt,
@@ -482,7 +481,7 @@ class StatementsAnalyzer extends SourceAnalyzer
                     ) {
                         $statements_analyzer->setFQCLN((string)$var_comment->type);
                     }
-                }
+                }*/
             }
         } else {
             $statements_analyzer->parsed_docblock = null;
