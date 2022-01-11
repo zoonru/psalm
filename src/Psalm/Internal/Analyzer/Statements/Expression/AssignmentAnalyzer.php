@@ -11,7 +11,6 @@ use Psalm\Exception\DocblockParseException;
 use Psalm\Exception\IncorrectDocblockException;
 use Psalm\Internal\Algebra;
 use Psalm\Internal\Algebra\FormulaGenerator;
-use Psalm\Internal\Analyzer\CommentAnalyzer;
 use Psalm\Internal\Analyzer\FunctionLikeAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Block\ForeachAnalyzer;
 use Psalm\Internal\Analyzer\Statements\Expression\Assignment\ArrayAssignmentAnalyzer;
@@ -155,13 +154,13 @@ class AssignmentAnalyzer
             $template_type_map = $statements_analyzer->getTemplateTypeMap();
 
             try {
-                $var_comments = CommentAnalyzer::getTypeFromComment(
+                $var_comments = []; /* CommentAnalyzer::getTypeFromComment(
                     $doc_comment,
                     $statements_analyzer->getSource(),
                     $statements_analyzer->getAliases(),
                     $template_type_map,
                     $file_storage->type_aliases
-                );
+                );*/
             } catch (IncorrectDocblockException $e) {
                 IssueBuffer::maybeAdd(
                     new MissingDocblockType(
