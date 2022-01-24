@@ -286,6 +286,7 @@ class IssueBuffer
             . $trace_var
             . '-' . $e->getShortLocation()
             . ':' . $e->code_location->getColumn()
+            . ' ' . $e->message
             . ' ' . $e->dupe_key;
 
         if ($reporting_level === Config::REPORT_INFO) {
