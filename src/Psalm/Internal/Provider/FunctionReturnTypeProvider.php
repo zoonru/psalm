@@ -3,9 +3,14 @@
 namespace Psalm\Internal\Provider;
 
 use Closure;
+use Generator;
 use PhpParser;
 use Psalm\CodeLocation;
+use Psalm\Codebase;
+use Psalm\Config;
 use Psalm\Context;
+use Psalm\Internal\Analyzer\StatementsAnalyzer;
+use Psalm\Internal\Codebase\InternalCallMapHandler;
 use Psalm\Internal\Provider\ReturnTypeProvider\ArrayChunkReturnTypeProvider;
 use Psalm\Internal\Provider\ReturnTypeProvider\ArrayColumnReturnTypeProvider;
 use Psalm\Internal\Provider\ReturnTypeProvider\ArrayFillReturnTypeProvider;
@@ -40,12 +45,27 @@ use Psalm\Internal\Provider\ReturnTypeProvider\StrReplaceReturnTypeProvider;
 use Psalm\Internal\Provider\ReturnTypeProvider\StrTrReturnTypeProvider;
 use Psalm\Internal\Provider\ReturnTypeProvider\TriggerErrorReturnTypeProvider;
 use Psalm\Internal\Provider\ReturnTypeProvider\VersionCompareReturnTypeProvider;
+use Psalm\Internal\Type\Comparator\UnionTypeComparator;
 use Psalm\Plugin\EventHandler\Event\FunctionReturnTypeProviderEvent;
 use Psalm\Plugin\EventHandler\FunctionReturnTypeProviderInterface;
 use Psalm\StatementsSource;
+use Psalm\Type\Atomic\TKeyedArray;
+use Psalm\Type\Atomic\TLiteralClassString;
+use Psalm\Type\Atomic\TLiteralFloat;
+use Psalm\Type\Atomic\TLiteralInt;
+use Psalm\Type\Atomic\TLiteralString;
+use Psalm\Type\Atomic\TNull;
+use Psalm\Type\Atomic\TTrue;
 use Psalm\Type\Union;
+use Throwable;
 
+use function array_keys;
+use function array_values;
+use function count;
+use function function_exists;
+use function is_array;
 use function is_subclass_of;
+use function strlen;
 use function strtolower;
 
 /**
@@ -53,6 +73,281 @@ use function strtolower;
  */
 class FunctionReturnTypeProvider
 {
+    /**
+     * Whitelisted methods for execution
+     *
+     * @var array<lowercase-string, true>
+     */
+    private const WHITELIST = [
+        // Core
+        'strlen' => true,
+        'strcmp' => true,
+        'strncmp' => true,
+        'strcasecmp' => true,
+        'strncasecmp' => true,
+
+        // ctype
+        'ctype_alnum' => true,
+        'ctype_alpha' => true,
+        'ctype_cntrl' => true,
+        'ctype_digit' => true,
+        'ctype_lower' => true,
+        'ctype_graph' => true,
+        'ctype_print' => true,
+        'ctype_punct' => true,
+        'ctype_space' => true,
+        'ctype_upper' => true,
+        'ctype_xdigit' => true,
+
+        // standard (escaping)
+        'addcslashes' => true,
+        'addslashes' => true,
+        'escapeshellarg' => true,
+        'escapeshellcmd' => true,
+        'html_entity_decode' => true,
+        'htmlentities' => true,
+        'htmlspecialchars' => true,
+        'htmlspecialchars_decode' => true,
+        'http_build_query' => true,
+
+        // standard (arrays except sorting functions)
+        /*'array_change_key_case' => true,
+        'array_chunk' => true,
+        'array_column' => true,
+        'array_combine' => true,
+        'array_count_values' => true,
+        'array_diff' => true,
+        'array_diff_assoc' => true,
+        'array_diff_key' => true,
+        'array_diff_uassoc' => true,
+        'array_diff_ukey' => true,
+        'array_fill' => true,
+        'array_fill_keys' => true,
+        'array_filter' => true,
+        'array_flip' => true,
+        'array_intersect' => true,
+        'array_intersect_assoc' => true,
+        'array_intersect_key' => true,
+        'array_intersect_uassoc' => true,
+        'array_intersect_ukey' => true,
+        'array_key_exists' => true,
+        'array_key_first' => true,
+        'array_key_last' => true,
+        'array_keys' => true,
+        'array_map' => true,
+        'array_merge' => true,
+        'array_merge_recursive' => true,
+        'array_multisort' => true,
+        'array_pad' => true,
+        'array_pop' => true,
+        'array_product' => true,
+        'array_push' => true,
+        'array_reduce' => true,
+        'array_replace' => true,
+        'array_replace_recursive' => true,
+        'array_reverse' => true,
+        'array_search' => true,
+        'array_shift' => true,
+        'array_slice' => true,
+        'array_splice' => true,
+        'array_sum' => true,
+        'array_udiff' => true,
+        'array_udiff_assoc' => true,
+        'array_udiff_uassoc' => true,
+        'array_uintersect' => true,
+        'array_uintersect_assoc' => true,
+        'array_uintersect_uassoc' => true,
+        'array_unique' => true,
+        'array_unshift' => true,
+        'array_values' => true,
+        'compact' => true,
+        'count' => true,
+        'sizeof' => true,
+        'end' => true,
+        'explode' => true,
+        'implode' => true,
+        'in_array' => true,
+        'join' => true,
+        'range' => true,*/
+
+        // standard (strings)
+        'chop' => true,
+        'chunk_split' => true,
+        'count_chars' => true,
+        'lcfirst' => true,
+        'ltrim' => true,
+        'rtrim' => true,
+        'str_contains' => true,
+        'str_ends_with' => true,
+        'str_getcsv' => true,
+        'str_ireplace' => true,
+        'str_pad' => true,
+        'str_repeat' => true,
+        'str_replace' => true,
+        'str_rot13' => true,
+        'str_split' => true,
+        'str_starts_with' => true,
+        'str_word_count' => true,
+        'strchr' => true,
+        'strcoll' => true,
+        'strcspn' => true,
+        'strip_tags' => true,
+        'stripcslashes' => true,
+        'stripos' => true,
+        'stripslashes' => true,
+        'stristr' => true,
+        'strnatcasecmp' => true,
+        'strnatcmp' => true,
+        'strpbrk' => true,
+        'strpos' => true,
+        'strptime' => true,
+        'strrchr' => true,
+        'strrev' => true,
+        'strripos' => true,
+        'strrpos' => true,
+        'strspn' => true,
+        'strstr' => true,
+        'strtok' => true,
+        'strtolower' => true,
+        'strtoupper' => true,
+        'strtr' => true,
+        'strval' => true,
+        'substr' => true,
+        'substr_compare' => true,
+        'substr_count' => true,
+        'substr_replace' => true,
+        'trim' => true,
+        'ucfirst' => true,
+        'ucwords' => true,
+        'wordwrap' => true,
+
+        // standard (string formatting)
+        'number_format' => true,
+        'sprintf' => true,
+        'vsprintf' => true,
+        'strtotime' => true,
+
+        // standard (encoding)
+        'chr' => true,
+        'base64_decode' => true,
+        'base64_encode' => true,
+        'base_convert' => true,
+        'bin2hex' => true,
+        'bindec' => true,
+        'convert_uudecode' => true,
+        'convert_uuencode' => true,
+        'decbin' => true,
+        'dechex' => true,
+        'decoct' => true,
+        'hex2bin' => true,
+        'hexdec' => true,
+        'octdec' => true,
+        'ord' => true,
+
+        'pack' => true,
+        'unpack' => true,
+
+        'nl2br' => true,
+        'parse_url' => true,
+        'php_strip_whitespace' => true,
+        'quoted_printable_decode' => true,
+        'quoted_printable_encode' => true,
+        'quotemeta' => true,
+        'rawurldecode' => true,
+        'rawurlencode' => true,
+        'urldecode' => true,
+        'urlencode' => true,
+        'utf8_decode' => true,
+        'utf8_encode' => true,
+
+        'hebrev' => true,
+
+        'ip2long' => true,
+        'long2ip' => true,
+
+        'highlight_string' => true,
+
+        // standard (filesystem, pure)
+        'basename' => true,
+        'dirname' => true,
+        'fnmatch' => true,
+
+        // standard (math)
+        'abs' => true,
+        'acos' => true,
+        'acosh' => true,
+        'asin' => true,
+        'asinh' => true,
+        'atan' => true,
+        'atan2' => true,
+        'atanh' => true,
+        'ceil' => true,
+        'cos' => true,
+        'cosh' => true,
+        'deg2rad' => true,
+        'exp' => true,
+        'expm1' => true,
+        'fdiv' => true,
+        'floor' => true,
+        'fmod' => true,
+        'hypot' => true,
+        'intdiv' => true,
+        'intval' => true,
+        'is_finite' => true,
+        'is_infinite' => true,
+        'is_nan' => true,
+        'log' => true,
+        'log10' => true,
+        'log1p' => true,
+        'max' => true,
+        'min' => true,
+        'pi' => true,
+        'pow' => true,
+        'rad2deg' => true,
+        'round' => true,
+        'sin' => true,
+        'sinh' => true,
+        'sqrt' => true,
+        'tan' => true,
+        'tanh' => true,
+
+        // standard (hashes)
+        'crc32' => true,
+        'sha1' => true,
+        'md5' => true,
+
+        // standard (type juggling)
+        'boolval' => true,
+        'doubleval' => true,
+        'floatval' => true,
+        'get_debug_type' => true,
+        'gettype' => true,
+        'is_array' => true,
+        'is_bool' => true,
+        'is_callable' => true,
+        'is_countable' => true,
+        'is_double' => true,
+        'is_float' => true,
+        'is_int' => true,
+        'is_integer' => true,
+        'is_iterable' => true,
+        'is_long' => true,
+        'is_null' => true,
+        'is_numeric' => true,
+        'is_object' => true,
+        'is_resource' => true,
+        'is_scalar' => true,
+        'is_string' => true,
+
+        // standard (phonetic string manipulation)
+        'levenshtein' => true,
+        'metaphone' => true,
+        'soundex' => true,
+
+        // standard (misc)
+        'version_compare' => true,
+    ];
+
     /**
      * @var array<
      *   lowercase-string,
@@ -126,7 +421,8 @@ class FunctionReturnTypeProvider
 
     public function has(string $function_id): bool
     {
-        return isset(self::$handlers[strtolower($function_id)]);
+        return isset(self::$handlers[strtolower($function_id)]) ||
+            isset(self::WHITELIST[strtolower($function_id)]);
     }
 
     /**
@@ -139,6 +435,132 @@ class FunctionReturnTypeProvider
         Context $context,
         CodeLocation $code_location
     ): ?Union {
+        $codebase = $statements_source->getCodebase();
+        $types = null;
+        $call_args = $stmt->args;
+        if ($statements_source instanceof StatementsAnalyzer &&
+            isset(self::WHITELIST[$function_id]) &&
+            function_exists($function_id) &&
+            InternalCallMapHandler::getCallablesFromCallMap($function_id) &&
+            $codebase->functions->isCallMapFunctionPure(
+                $codebase,
+                $statements_source->getNodeTypeProvider(),
+                $function_id,
+                $call_args
+            )
+        ) {
+            $node_data = $statements_source->node_data;
+            $callable = InternalCallMapHandler::getCallableFromCallMapById(
+                $codebase,
+                $function_id,
+                $call_args,
+                $node_data
+            );
+            $required = 0;
+            $byRef = false;
+            $variadic = false;
+            foreach ($callable->params ?? [] as $param) {
+                if (!$param->is_optional) {
+                    $required++;
+                }
+                if ($param->by_ref) {
+                    $byRef = true;
+                }
+                if ($param->is_variadic) {
+                    $variadic = true;
+                }
+            }
+            if ($byRef && $function_id === 'end') {
+                $byRef = false;
+            }
+            $has_leftover = false;
+            $type_args = [];
+            foreach ($call_args as $arg) {
+                $type = $node_data->getType($arg->value);
+                if ($arg->unpack) {
+                    if (!$type) {
+                        $type_args []= null;
+                        $has_leftover = true;
+                        continue;
+                    }
+                    $had_array = false;
+                    foreach (self::extractLiterals($type, $has_leftover) as $elem) {
+                        if (is_array($elem)) {
+                            if ($had_array) {
+                                $has_leftover = true;
+                                continue;
+                            }
+                            $had_array = true;
+                            /**
+                             * @psalm-suppress MixedAssignment
+                             * @psalm-suppress MixedArgument
+                             */
+                            foreach ($elem as $sub) {
+                                $type_args []= Type::fromLiteral($sub);
+                            }
+                        } else {
+                            $has_leftover = true;
+                        }
+                    }
+                } else {
+                    $type_args []= $type;
+                }
+            }
+            if (!$byRef &&
+                $callable->params &&
+                $required <= count($type_args) &&
+                (count($type_args) <= count($callable->params) || $variadic)
+            ) {
+                $maxStrLen = Config::getInstance()->max_string_length;
+                foreach ($this->permutateArguments(
+                    $callable->params,
+                    $type_args,
+                    $codebase,
+                    $has_leftover
+                ) as $args) {
+                    try {
+                        /**
+                         * @psalm-suppress PossiblyInvalidArgument
+                         * @psalm-suppress PossiblyUndefinedIntArrayOffset
+                         * @psalm-suppress PossiblyInvalidOperand
+                         * @psalm-suppress PossiblyInvalidCast
+                         */
+                        if (($function_id === 'array_combine' && count($args[0]) !== count($args[1])) ||
+                            ($function_id === 'str_repeat' && (strlen($args[0]) * $args[1]) >= $maxStrLen) ||
+                            ($function_id === 'str_pad' && $args[1] >= $maxStrLen) ||
+                            ($function_id === 'array_pad' && $args[1] > 100) ||
+                            ($function_id === 'array_fill' && $args[1] > 100)
+                        ) {
+                            $has_leftover = true;
+                            continue;
+                        }
+                        /** @psalm-suppress MixedArgument */
+                        $newTypes = Type::fromLiteral($function_id(...$args));
+                        $types = $types ? Type::combineUnionTypes($types, $newTypes) : $newTypes;
+                    } catch (Throwable $e) {
+                    }
+                }
+
+                if (!$has_leftover && $types) {
+                    return $types;
+                }
+            }
+        }
+
+        foreach (self::$legacy_handlers[strtolower($function_id)] ?? [] as $function_handler) {
+            $return_type = $function_handler(
+                $statements_source,
+                $function_id,
+                $stmt->args,
+                $context,
+                $code_location
+            );
+
+            if ($return_type) {
+                return $types ? Type::combineUnionTypes($types, $return_type) : $return_type;
+            }
+        }
+
         foreach (self::$handlers[strtolower($function_id)] ?? [] as $function_handler) {
             $event = new FunctionReturnTypeProviderEvent(
                 $statements_source,
@@ -150,10 +572,195 @@ class FunctionReturnTypeProvider
             $return_type = $function_handler($event);
 
             if ($return_type) {
-                return $return_type;
+                return $types ? Type::combineUnionTypes($types, $return_type) : $return_type;
             }
         }
 
         return null;
+    }
+
+
+    /**
+     * Permutate arguments
+     *
+     * @param list<FunctionLikeParameter> $params
+     * @param list<?Union> $args
+     * @param NodeDataProvider $node_data
+     * @param Codebase $codebase
+     * @param bool $has_leftover
+     * @param array<int, array|float|int|string> $current
+     * @param integer $index
+     * @return Generator<int, array<int, (array|float|int|string)>, null, void>
+     */
+    public static function permutateArguments(
+        array $params,
+        array $args,
+        Codebase $codebase,
+        bool &$has_leftover,
+        array $current = [],
+        int $index = 0,
+        int $paramsIndex = 0
+    ): Generator {
+        if ($index === count($args)) {
+            yield $current;
+            return;
+        }
+
+        $cur_leftover = false;
+        foreach (self::getAllowedLiteralParamValues(
+            $args[$index],
+            $params[$paramsIndex]->type,
+            $codebase,
+            $cur_leftover
+        ) as $value) {
+            $current[$index] = $value;
+            yield from self::permutateArguments(
+                $params,
+                $args,
+                $codebase,
+                $has_leftover,
+                $current,
+                $index+1,
+                $params[$paramsIndex]->is_variadic ? $paramsIndex : $paramsIndex+1
+            );
+        }
+        if ($cur_leftover) {
+            $has_leftover = true;
+        }
+    }
+
+    /**
+     * Get all allowed literal values for the specified parameter
+     *
+     * @param ?Union $type
+     * @param ?Union $required_type
+     * @param boolean $has_leftover
+     * @return Generator<int, array<(int|string), (array|float|int|string)>, null, void>
+     */
+    public static function getAllowedLiteralParamValues(
+        ?Union $type,
+        ?Union $required_type,
+        Codebase $codebase,
+        bool &$has_leftover
+    ): Generator {
+        if (!$type) {
+            return;
+        }
+        if (!$required_type || $required_type->hasMixed()) {
+            $has_leftover = false;
+            $accepted = $type;
+        } else {
+            $acceptedKeys = [];
+            if (!UnionTypeComparator::canBeContainedBy($codebase, $type, $required_type, false, false, $acceptedKeys)) {
+                return;
+            }
+            $accepted = clone $type;
+            $allKeys = array_keys($type->getAtomicTypes());
+            foreach ($allKeys as $atomic_key) {
+                if (!isset($acceptedKeys[$atomic_key])) {
+                    $has_leftover = true;
+                    $accepted->removeType($atomic_key);
+                }
+            }
+        }
+        yield from self::extractLiterals($accepted, $has_leftover);
+    }
+
+
+    /**
+     * Extract literal types
+     *
+     * @param Union $type
+     * @param boolean $has_leftover
+     *
+     * @psalm-suppress InvalidReturnType
+     * @psalm-suppress InvalidReturnStatement
+     *
+     * @return Generator<int, array<(int|string), (array|float|int|string)>, null, void>
+     */
+    public static function extractLiterals(
+        Union $type,
+        bool &$has_leftover
+    ): Generator {
+        if ($type->possibly_undefined) {
+            $has_leftover = true;
+        }
+        foreach ($type->getAtomicTypes() as $atomic_key_type) {
+            if ($atomic_key_type instanceof TLiteralString ||
+                $atomic_key_type instanceof TLiteralClassString ||
+                $atomic_key_type instanceof TLiteralInt ||
+                $atomic_key_type instanceof TLiteralFloat
+            ) {
+                yield $atomic_key_type->value;
+            } elseif ($atomic_key_type instanceof TTrue || $atomic_key_type instanceof TFalse) {
+                yield ($atomic_key_type instanceof TTrue);
+            } elseif ($atomic_key_type instanceof TNull) {
+                yield null;
+            } elseif ($atomic_key_type instanceof TKeyedArray) {
+                yield from self::permutateArray(
+                    array_keys($atomic_key_type->properties),
+                    array_values($atomic_key_type->properties),
+                    $has_leftover
+                );
+            } elseif ($atomic_key_type instanceof TArray && $atomic_key_type->type_params[1]->isEmpty()) {
+                yield [];
+            } else {
+                $has_leftover = true;
+            }
+        }
+    }
+
+
+    /**
+     * Permutate array
+     *
+     * @param non-empty-list<string|int> $keys
+     * @param non-empty-list<Union> $values
+     * @param bool $has_leftover
+     * @param array<int|string, array|float|int|string> $current
+     * @param integer $index
+     * @return Generator<int, array<(int|string), (array|float|int|string)>, null, void>
+     */
+    public static function permutateArray(
+        array $keys,
+        array $values,
+        bool &$has_leftover,
+        array $current = [],
+        int $index = 0
+    ): Generator {
+        if ($index === count($keys)) {
+            yield $current;
+            return;
+        }
+
+        $cur_leftover = false;
+        foreach (self::extractLiterals(
+            $values[$index],
+            $cur_leftover
+        ) as $value) {
+            $current[$keys[$index]] = $value;
+            yield from self::permutateArray(
+                $keys,
+                $values,
+                $has_leftover,
+                $current,
+                $index+1
+            );
+        }
+        if ($values[$index]->possibly_undefined) {
+            if (isset($current[$keys[$index]])) {
+                unset($current[$keys[$index]]);
+            }
+            yield from self::permutateArray(
+                $keys,
+                $values,
+                $has_leftover,
+                $current,
+                $index+1
+            );
+        }
+        if ($cur_leftover) {
+            $has_leftover = true;
+        }
     }
 }
