@@ -59,6 +59,12 @@ class UnionTypeComparator
             return false;
         }
 
+        if ($container_type->from_constant
+            && !$input_type->from_constant
+        ) {
+            return true;
+        }
+
         if ($container_type->hasMixed() && !$container_type->isEmptyMixed()) {
             return true;
         }

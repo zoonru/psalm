@@ -57,7 +57,11 @@ class AtomicTypeComparator
         bool $allow_float_int_equality = true,
         ?TypeComparisonResult $atomic_comparison_result = null
     ): bool {
-
+        if ($container_type_part->from_constant
+            && !$input_type_part->from_constant
+        ) {
+            return false;
+        }
         if (($container_type_part instanceof TTemplateParam
                 || ($container_type_part instanceof TNamedObject
                     && isset($container_type_part->extra_types)))

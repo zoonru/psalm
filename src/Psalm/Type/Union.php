@@ -69,6 +69,12 @@ class Union implements TypeNode
      * @var bool
      */
     public $from_docblock = false;
+    /**
+     * Whether the type originated in a constant
+     *
+     * @var bool
+     */
+    public $from_constant = false;
 
     /**
      * Whether the type originated from integer calculation

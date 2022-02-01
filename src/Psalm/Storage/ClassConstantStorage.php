@@ -55,6 +55,12 @@ class ClassConstantStorage
      */
     public function __construct(?Union $type, int $visibility, ?CodeLocation $location)
     {
+        if ($type) {
+            $type->from_constant = true;
+            foreach ($type->getAtomicTypes() as $t) {
+                $t->from_constant = true;
+            }
+        }
         $this->visibility = $visibility;
         $this->location = $location;
         $this->type = $type;

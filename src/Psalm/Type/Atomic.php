@@ -98,6 +98,13 @@ abstract class Atomic implements TypeNode
     public $from_docblock = false;
 
     /**
+     * Whether or not the type comes from a constant
+     *
+     * @var bool
+     */
+    public $from_constant = false;
+
+    /**
      * @var ?int
      */
     public $offset_start;

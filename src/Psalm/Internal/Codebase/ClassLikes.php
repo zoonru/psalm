@@ -1663,12 +1663,15 @@ class ClassLikes
             }
 
             if ($constant_storage->unresolved_node) {
-                $constant_storage->type = new Union([ConstantTypeResolver::resolve(
+                $atomic = ConstantTypeResolver::resolve(
                     $this,
                     $constant_storage->unresolved_node,
                     $statements_analyzer,
                     $visited_constant_ids
-                )]);
+                );
+                $atomic->from_constant = true;
+                $constant_storage->type = new Union([$atomic]);
+                $constant_storage->type->from_constant = true;
             }
 
             return $constant_storage->type;
