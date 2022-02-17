@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <psalm
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns="https://getpsalm.org/schema/config"
+    xmlns="https://raw.githubusercontent.com/zoonru/psalm/fixes/config.xsd"
     name="Psalm for Psalm"
     useDocblockTypes="true"
     errorLevel="1"
@@ -13,7 +13,7 @@
     ensureArrayStringOffsetsExist="true"
     ensureArrayIntOffsetsExist="true"
     resolveFromConfigFile="true"
-    xsi:schemaLocation="https://getpsalm.org/schema/config config.xsd"
+    xsi:schemaLocation="https://raw.githubusercontent.com/zoonru/psalm/fixes/config.xsd config.xsd"
     limitMethodComplexity="true"
     errorBaseline="psalm-baseline.xml"
     findUnusedPsalmSuppress="true"
