@@ -65,6 +65,9 @@ final class ErrorHandler
             string $error_filename = 'unknown',
             int $error_line = -1
         ): bool {
+            if (str_contains($error_filename, 'vendor/zoon') && !str_contains($error_filename, 'vendor/zoon/check')) {
+                return false;
+            }
             if (ErrorHandler::$exceptions_enabled && ($error_code & error_reporting())) {
                 throw new RuntimeException(
                     'PHP Error: ' . $error_message . ' in ' . $error_filename . ':' . $error_line,

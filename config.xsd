@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <xs:schema
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    xmlns="https://getpsalm.org/schema/config"
-    targetNamespace="https://getpsalm.org/schema/config"
+    xmlns="https://raw.githubusercontent.com/zoonru/psalm/fixes/config.xsd"
+    targetNamespace="https://raw.githubusercontent.com/zoonru/psalm/fixes/config.xsd"
     elementFormDefault="qualified"
 >
     <xs:element name="psalm" type="PsalmType" />
