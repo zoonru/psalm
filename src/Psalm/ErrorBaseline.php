@@ -149,7 +149,7 @@ class ErrorBaseline
         $existingIssues = self::read($fileProvider, $baselineFile);
         $newIssues = self::countIssueTypesByFile($issues);
 
-        foreach ($existingIssues as $file => &$existingIssuesCount) {
+        foreach ($existingIssues as $file => $existingIssuesCount) {
             if (!isset($newIssues[$file])) {
                 unset($existingIssues[$file]);
 
@@ -172,6 +172,7 @@ class ErrorBaseline
                     $newIssues[$file][$issueType]['s']
                 );
             }
+            $existingIssues[$file] = $existingIssuesCount;
         }
 
         $groupedIssues = array_filter($existingIssues);
@@ -229,8 +230,8 @@ class ErrorBaseline
         // Sort files first
         ksort($groupedIssues);
 
-        foreach ($groupedIssues as &$issues) {
-            ksort($issues);
+        foreach ($groupedIssues as $k => $issues) {
+            $groupedIssues[$k] = ksort($issues);
         }
 
         return $groupedIssues;

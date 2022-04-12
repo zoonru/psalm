@@ -188,8 +188,8 @@ class TObjectWithProperties extends TObject
 
     public function __clone()
     {
-        foreach ($this->properties as &$property) {
-            $property = clone $property;
+        foreach ($this->properties as $k => $property) {
+            $this->properties[$k] = clone $property;
         }
     }
 

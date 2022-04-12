@@ -563,8 +563,8 @@ class Methods
                 || $atomic_type instanceof TIterable
                 || $atomic_type instanceof TGenericObject
             ) {
-                foreach ($atomic_type->type_params as &$type_param) {
-                    $type_param = self::localizeType(
+                foreach ($atomic_type->type_params as $k => $type_param) {
+                    $atomic_type->type_params[$k] = self::localizeType(
                         $codebase,
                         $type_param,
                         $appearing_fq_class_name,
@@ -583,8 +583,8 @@ class Methods
             }
 
             if ($atomic_type instanceof TKeyedArray) {
-                foreach ($atomic_type->properties as &$property_type) {
-                    $property_type = self::localizeType(
+                foreach ($atomic_type->properties as $k => $property_type) {
+                    $atomic_type->properties[$k] = self::localizeType(
                         $codebase,
                         $property_type,
                         $appearing_fq_class_name,

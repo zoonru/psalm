@@ -174,8 +174,8 @@ trait GenericTrait
 
     public function __clone()
     {
-        foreach ($this->type_params as &$type_param) {
-            $type_param = clone $type_param;
+        foreach ($this->type_params as $k => $type_param) {
+            $this->type_params[$k] = clone $type_param;
         }
     }
 

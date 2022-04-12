@@ -62,7 +62,7 @@ class Assertion
 
                         $substitute = false;
 
-                        foreach ($rule_tokens as &$rule_token) {
+                        foreach ($rule_tokens as $k => $rule_token) {
                             if (isset($inferred_lower_bounds[$rule_token[0]])) {
                                 foreach ($inferred_lower_bounds[$rule_token[0]] as $lower_bounds) {
                                     $substitute = true;
@@ -80,6 +80,7 @@ class Assertion
                                         $rule_token[0] = $first_type->getId();
                                     }
                                 }
+                                $rule_tokens[$k] = $rule_token;
                             }
                         }
 

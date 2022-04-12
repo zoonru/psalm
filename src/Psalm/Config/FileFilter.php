@@ -354,7 +354,7 @@ class FileFilter
             $config['file'] = [];
             /** @var SimpleXMLElement $file */
             foreach ($e->file as $file) {
-                $config['file'][]['name'] = (string) $file['name'];
+                $config['file'][] = ['name' => (string) $file['name']];
             }
         }
 
@@ -362,7 +362,7 @@ class FileFilter
             $config['referencedClass'] = [];
             /** @var SimpleXMLElement $referenced_class */
             foreach ($e->referencedClass as $referenced_class) {
-                $config['referencedClass'][]['name'] = strtolower((string)$referenced_class['name']);
+                $config['referencedClass'][] = ['name' => strtolower((string)$referenced_class['name'])];
             }
         }
 
@@ -370,7 +370,7 @@ class FileFilter
             $config['referencedMethod'] = [];
             /** @var SimpleXMLElement $referenced_method */
             foreach ($e->referencedMethod as $referenced_method) {
-                $config['referencedMethod'][]['name'] = (string)$referenced_method['name'];
+                $config['referencedMethod'][] = ['name' => (string)$referenced_method['name']];
             }
         }
 
@@ -378,7 +378,7 @@ class FileFilter
             $config['referencedFunction'] = [];
             /** @var SimpleXMLElement $referenced_function */
             foreach ($e->referencedFunction as $referenced_function) {
-                $config['referencedFunction'][]['name'] = strtolower((string)$referenced_function['name']);
+                $config['referencedFunction'][] = ['name' => strtolower((string)$referenced_function['name'])];
             }
         }
 
@@ -386,7 +386,7 @@ class FileFilter
             $config['referencedProperty'] = [];
             /** @var SimpleXMLElement $referenced_property */
             foreach ($e->referencedProperty as $referenced_property) {
-                $config['referencedProperty'][]['name'] = strtolower((string)$referenced_property['name']);
+                $config['referencedProperty'][] = ['name' => strtolower((string)$referenced_property['name'])];
             }
         }
 
@@ -395,7 +395,7 @@ class FileFilter
 
             /** @var SimpleXMLElement $referenced_variable */
             foreach ($e->referencedVariable as $referenced_variable) {
-                $config['referencedVariable'][]['name'] = strtolower((string)$referenced_variable['name']);
+                $config['referencedVariable'][] = ['name' => strtolower((string)$referenced_variable['name'])];
             }
         }
 

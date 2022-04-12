@@ -585,8 +585,8 @@ abstract class Atomic implements TypeNode
             || $this instanceof TObjectWithProperties
         ) {
             if ($this->extra_types) {
-                foreach ($this->extra_types as &$type) {
-                    $type = clone $type;
+                foreach ($this->extra_types as $k => $type) {
+                    $this->extra_types[$k] = clone $type;
                 }
             }
         }

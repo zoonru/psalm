@@ -393,6 +393,7 @@ class TextDocument
                 );
 
                 $indentation = '';
+                $matches = [];
                 if (preg_match('/^(\s*)/', $issue->snippet, $matches)) {
                     $indentation = $matches[1] ?? '';
                 }

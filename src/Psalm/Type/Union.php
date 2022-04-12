@@ -322,8 +322,8 @@ class Union implements TypeNode
         $this->literal_float_types = [];
         $this->typed_class_strings = [];
 
-        foreach ($this->types as $key => &$type) {
-            $type = clone $type;
+        foreach ($this->types as $key => $type) {
+            $this->types[$key] = $type = clone $type;
 
             if ($type instanceof TLiteralInt) {
                 $this->literal_int_types[$key] = $type;

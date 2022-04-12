@@ -506,10 +506,8 @@ abstract class ClassLikeAnalyzer extends SourceAnalyzer
 
             case 'NULL':
                 return Type::getNull();
-
-            default:
-                return Type::getMixed();
         }
+        return Type::getMixed();
     }
 
     /**
@@ -637,8 +635,8 @@ abstract class ClassLikeAnalyzer extends SourceAnalyzer
         try {
             return $codebase->file_storage_provider->get($file_path)->classlikes_in_file;
         } catch (InvalidArgumentException $e) {
-            return [];
         }
+        return [];
     }
 
     public function getFileAnalyzer(): FileAnalyzer

@@ -70,8 +70,8 @@ class SimpleNameResolver extends NodeVisitorAbstract
             if (null !== $node->extends) {
                 $node->extends = $this->resolveClassName($node->extends);
             }
-            foreach ($node->implements as &$interface) {
-                $interface = $this->resolveClassName($interface);
+            foreach ($node->implements as $k => $interface) {
+                $node->implements[$k] = $this->resolveClassName($interface);
             }
             $this->resolveAttrGroups($node);
             if (null !== $node->name) {
@@ -111,8 +111,8 @@ class SimpleNameResolver extends NodeVisitorAbstract
                 $node->class = $this->resolveClassName($node->class);
             }
         } elseif ($node instanceof Stmt\Catch_) {
-            foreach ($node->types as &$type) {
-                $type = $this->resolveClassName($type);
+            foreach ($node->types as $k => $type) {
+                $node->types[$k] = $this->resolveClassName($type);
             }
         } elseif ($node instanceof Expr\FuncCall) {
             if ($node->name instanceof Name) {
@@ -123,8 +123,8 @@ class SimpleNameResolver extends NodeVisitorAbstract
         } elseif ($node instanceof Stmt\Trait_) {
             $this->resolveTrait($node);
         } elseif ($node instanceof Stmt\TraitUse) {
-            foreach ($node->traits as &$trait) {
-                $trait = $this->resolveClassName($trait);
+            foreach ($node->traits as $k => $trait) {
+                $node->traits[$k] = $this->resolveClassName($trait);
             }
 
             foreach ($node->adaptations as $adaptation) {
@@ -133,8 +133,8 @@ class SimpleNameResolver extends NodeVisitorAbstract
                 }
 
                 if ($adaptation instanceof Stmt\TraitUseAdaptation\Precedence) {
-                    foreach ($adaptation->insteadof as &$insteadof) {
-                        $insteadof = $this->resolveClassName($insteadof);
+                    foreach ($adaptation->insteadof as $k => $insteadof) {
+                        $adaptation->insteadof[$k] = $this->resolveClassName($insteadof);
                     }
                 }
             }

@@ -1470,8 +1470,8 @@ abstract class FunctionLikeAnalyzer extends SourceAnalyzer
                     $this->source->getNamespace(),
                     $this->source->getAliasedClassesFlipped(),
                     $this->source->getFQCLN(),
-                    $project_analyzer->getCodebase()->php_major_version,
-                    $project_analyzer->getCodebase()->php_minor_version
+                    $codebase->php_major_version,
+                    $codebase->php_minor_version
                 ) : null,
             $inferred_return_type->toNamespacedString(
                 $this->source->getNamespace(),

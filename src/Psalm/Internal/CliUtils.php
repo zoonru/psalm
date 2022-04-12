@@ -611,6 +611,7 @@ HELP;
             return -1;
         }
 
+        $matches = [];
         if (preg_match('/^(\d+)(\D?)$/', $limit, $matches)) {
             assert(isset($matches[1]));
             $limit = (int)$matches[1];

@@ -798,7 +798,7 @@ class TemplateStandinTypeReplacer
                 }
             }
 
-            foreach ($atomic_types as &$atomic_type) {
+            foreach ($atomic_types as $k => $atomic_type) {
                 if ($atomic_type instanceof TNamedObject
                     || $atomic_type instanceof TTemplateParam
                     || $atomic_type instanceof TIterable
@@ -806,7 +806,7 @@ class TemplateStandinTypeReplacer
                 ) {
                     $atomic_type->extra_types = $extra_types;
                 } elseif ($atomic_type instanceof TObject && $extra_types) {
-                    $atomic_type = reset($extra_types);
+                    $atomic_types[$k] = $atomic_type = reset($extra_types);
                     $atomic_type->extra_types = array_slice($extra_types, 1);
                 }
             }

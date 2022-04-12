@@ -967,7 +967,7 @@ class ClassLikes
 
             try {
                 $source_method_storage = $methods->getStorage(
-                    new MethodIdentifier(...$source_parts)
+                    new MethodIdentifier($source_parts[0], $source_parts[1])
                 );
             } catch (InvalidArgumentException $e) {
                 continue;

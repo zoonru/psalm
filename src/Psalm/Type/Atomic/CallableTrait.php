@@ -56,8 +56,8 @@ trait CallableTrait
     public function __clone()
     {
         if ($this->params) {
-            foreach ($this->params as &$param) {
-                $param = clone $param;
+            foreach ($this->params as $k => $param) {
+                $this->params[$k] = clone $param;
             }
         }
 

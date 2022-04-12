@@ -104,14 +104,14 @@ class CustomTraverser extends NodeTraverser
     {
         $doNodes = [];
 
-        foreach ($nodes as $i => &$node) {
+        foreach ($nodes as $i => $node) {
             if ($node instanceof Node) {
                 $traverseChildren = true;
                 foreach ($this->visitors as $visitor) {
                     $return = $visitor->enterNode($node, $traverseChildren);
                     if (null !== $return) {
                         if ($return instanceof Node) {
-                            $node = $return;
+                            $nodes[$i] = $node = $return;
                         } elseif (self::DONT_TRAVERSE_CHILDREN === $return) {
                             $traverseChildren = false;
                         } elseif (self::STOP_TRAVERSAL === $return) {
@@ -126,7 +126,7 @@ class CustomTraverser extends NodeTraverser
                 }
 
                 if ($traverseChildren) {
-                    $node = $this->traverseNode($node);
+                    $nodes[$i] = $node = $this->traverseNode($node);
                     if ($this->stopTraversal) {
                         break;
                     }
@@ -136,7 +136,7 @@ class CustomTraverser extends NodeTraverser
                     $return = $visitor->leaveNode($node);
                     if (null !== $return) {
                         if ($return instanceof Node) {
-                            $node = $return;
+                            $nodes[$i] = $node = $return;
                         } elseif (is_array($return)) {
                             $doNodes[] = [$i, $return];
                             break;

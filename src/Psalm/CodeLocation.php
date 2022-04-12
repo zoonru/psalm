@@ -260,6 +260,7 @@ class CodeLocation
                 $regex = '/(' . str_replace(',', ',[ ]*', preg_quote($this->text, '/')) . ')/';
             }
 
+            $matches = [];
             if (preg_match($regex, $preview_snippet, $matches, PREG_OFFSET_CAPTURE)) {
                 if (!isset($matches[1]) || $matches[1][1] === -1) {
                     throw new LogicException(

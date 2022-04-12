@@ -976,8 +976,9 @@ class Codebase
     {
         if (strpos($symbol, '::')) {
             $symbol = substr($symbol, 0, -2);
+            [$class, $method] = explode('::', $symbol);
             /** @psalm-suppress ArgumentTypeCoercion */
-            $method_id = new MethodIdentifier(...explode('::', $symbol));
+            $method_id = new MethodIdentifier($class, $method);
 
             $declaring_method_id = $this->methods->getDeclaringMethodId($method_id);
 
@@ -1017,9 +1018,9 @@ class Codebase
             if (strpos($symbol, '::')) {
                 if (strpos($symbol, '()')) {
                     $symbol = substr($symbol, 0, -2);
-
+                    [$class, $method] = explode('::', $symbol);
                     /** @psalm-suppress ArgumentTypeCoercion */
-                    $method_id = new MethodIdentifier(...explode('::', $symbol));
+                    $method_id = new MethodIdentifier($class, $method);
 
                     $declaring_method_id = $this->methods->getDeclaringMethodId($method_id);
 
@@ -1156,9 +1157,9 @@ class Codebase
             if (strpos($symbol, '::')) {
                 if (strpos($symbol, '()')) {
                     $symbol = substr($symbol, 0, -2);
-
+                    [$class, $method] = explode('::', $symbol);
                     /** @psalm-suppress ArgumentTypeCoercion */
-                    $method_id = new MethodIdentifier(...explode('::', $symbol));
+                    $method_id = new MethodIdentifier($class, $method);
 
                     $declaring_method_id = $this->methods->getDeclaringMethodId($method_id);
 
@@ -1334,8 +1335,9 @@ class Codebase
         $signature_label = '';
         $signature_documentation = null;
         if (strpos($function_symbol, '::') !== false) {
+            [$class, $method] = explode('::', $function_symbol);
             /** @psalm-suppress ArgumentTypeCoercion */
-            $method_id = new MethodIdentifier(...explode('::', $function_symbol));
+            $method_id = new MethodIdentifier($class, $method);
 
             $declaring_method_id = $this->methods->getDeclaringMethodId($method_id);
 
@@ -1434,6 +1436,7 @@ class Codebase
                 continue;
             }
 
+            $matches = [];
             $num_whitespace_bytes = preg_match('/\G\s+/', $file_contents, $matches, 0, $end_pos_excluding_whitespace)
                 ? strlen($matches[0])
                 : 0;
@@ -1855,7 +1858,8 @@ class Codebase
         $offsetLength = $offset - strlen($file_contents);
 
         //PHP 8.0: Argument #3 ($offset) must be contained in argument #1 ($haystack)
-        if (($textlen = strlen($file_contents)) < $offsetLength) {
+        $textlen = strlen($file_contents);
+        if ($textlen < $offsetLength) {
             $offsetLength = $textlen;
         }
 

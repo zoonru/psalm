@@ -1034,6 +1034,7 @@ class FunctionLikeDocblockScanner
 
                 $fancy_path_regex = '/-\(([a-z\-]+)\)->/';
 
+                $matches = [];
                 if (preg_match($fancy_path_regex, $flow, $matches)) {
                     if (isset($matches[1])) {
                         $path_type = $matches[1];

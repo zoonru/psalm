@@ -146,7 +146,7 @@ class TypeExpander
             if ($return_type->extra_types) {
                 $new_intersection_types = [];
 
-                foreach ($return_type->extra_types as &$extra_type) {
+                foreach ($return_type->extra_types as $k => $extra_type) {
                     self::expandAtomic(
                         $codebase,
                         $extra_type,
@@ -158,6 +158,7 @@ class TypeExpander
                         $expand_generic,
                         $expand_templates
                     );
+                    $return_type->extra_types[$k] = $extra_type;
 
                     if ($extra_type instanceof TNamedObject && $extra_type->extra_types) {
                         $new_intersection_types = array_merge(
@@ -483,8 +484,8 @@ class TypeExpander
                 );
             }
         } elseif ($return_type instanceof TKeyedArray) {
-            foreach ($return_type->properties as &$property_type) {
-                $property_type = self::expandUnion(
+            foreach ($return_type->properties as $k => $property_type) {
+                $return_type->properties[$k] = self::expandUnion(
                     $codebase,
                     $property_type,
                     $self_class,
@@ -513,8 +514,8 @@ class TypeExpander
         }
 
         if ($return_type instanceof TObjectWithProperties) {
-            foreach ($return_type->properties as &$property_type) {
-                $property_type = self::expandUnion(
+            foreach ($return_type->properties as $k => $property_type) {
+                $return_type->properties[$k] = self::expandUnion(
                     $codebase,
                     $property_type,
                     $self_class,

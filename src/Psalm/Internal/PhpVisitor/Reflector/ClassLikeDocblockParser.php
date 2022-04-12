@@ -304,6 +304,7 @@ class ClassLikeDocblockParser
 
                 $has_return = false;
 
+                $matches = [];
                 if (!preg_match('/^([a-z_A-Z][a-z_0-9A-Z]+) *\(/', $method_entry, $matches)) {
                     $doc_line_parts = CommentAnalyzer::splitDocLine($method_entry);
 
@@ -330,6 +331,7 @@ class ClassLikeDocblockParser
 
                 $end_of_method_regex = '/(?<!array\()\) ?(\: ?(\??[\\\\a-zA-Z0-9_]+))?/';
 
+                $matches = [];
                 if (preg_match($end_of_method_regex, $method_entry, $matches, PREG_OFFSET_CAPTURE)) {
                     $method_entry = substr($method_entry, 0, $matches[0][1] + strlen($matches[0][0]));
                 }

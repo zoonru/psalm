@@ -102,6 +102,7 @@ class DocComment
 
         if ($preserve_format) {
             foreach ($lines as $m => $line) {
+                $matches = [];
                 if (preg_match('/^\s?@([\w\-:]+)[\t ]*(.*)$/sm', $line, $matches)) {
                     [$full_match, $type, $data] = $matches;
 
@@ -120,6 +121,7 @@ class DocComment
             $docblock = implode("\n", $lines);
 
             // Parse @specials.
+            $matches = [];
             if (preg_match_all('/^\s?@([\w\-:]+)[\t ]*([^\n]*)/m', $docblock, $matches, PREG_SET_ORDER)) {
                 $docblock = preg_replace('/^\s?@([\w\-:]+)\s*([^\n]*)/m', '', $docblock);
                 foreach ($matches as $m => $match) {
@@ -212,6 +214,7 @@ class DocComment
      */
     public static function parseSuppressList(string $suppress_entry): array
     {
+        $matches = [];
         preg_match(
             '/
                 (?(DEFINE)
