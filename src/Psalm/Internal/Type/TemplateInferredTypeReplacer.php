@@ -214,14 +214,12 @@ class TemplateInferredTypeReplacer
                 throw new UnexpectedValueException('This array should be full');
             }
 
-            $union->replaceTypes(
+            return $union->replaceTypes(
                 TypeCombiner::combine(
                     $new_types,
                     $codebase
                 )->getAtomicTypes()
-            );
-
-            return $union->freeze();
+            )->freeze();
         }
 
         foreach ($keys_to_unset as $key) {
@@ -230,14 +228,12 @@ class TemplateInferredTypeReplacer
 
         $atomic_types = array_values(array_merge($union->getAtomicTypes(), $new_types));
 
-        $union->replaceTypes(
+        return $union->replaceTypes(
             TypeCombiner::combine(
                 $atomic_types,
                 $codebase
             )->getAtomicTypes()
-        );
-
-        return $union->freeze();
+        )->freeze();
     }
 
     /**
