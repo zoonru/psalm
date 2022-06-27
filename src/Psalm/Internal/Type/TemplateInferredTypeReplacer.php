@@ -409,7 +409,7 @@ class TemplateInferredTypeReplacer
         $atomic_type = clone $atomic_type;
 
         if ($template_type) {
-            self::replace(
+            $atomic_type->as_type = self::replace(
                 $atomic_type->as_type,
                 $template_result,
                 $codebase
@@ -477,7 +477,7 @@ class TemplateInferredTypeReplacer
                     )
                 ];
 
-                self::replace(
+                $if_template_type = self::replace(
                     $if_template_type,
                     $refined_template_result,
                     $codebase
@@ -507,7 +507,7 @@ class TemplateInferredTypeReplacer
                     )
                 ];
 
-                self::replace(
+                $else_template_type = self::replace(
                     $else_template_type,
                     $refined_template_result,
                     $codebase
@@ -516,13 +516,13 @@ class TemplateInferredTypeReplacer
         }
 
         if (!$if_template_type && !$else_template_type) {
-            self::replace(
+            $atomic_type->if_type = self::replace(
                 $atomic_type->if_type,
                 $template_result,
                 $codebase
             );
 
-            self::replace(
+            $atomic_type->else_type = self::replace(
                 $atomic_type->else_type,
                 $template_result,
                 $codebase
