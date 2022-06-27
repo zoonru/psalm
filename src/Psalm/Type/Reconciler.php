@@ -930,11 +930,11 @@ class Reconciler
     }
 
     /**
+     * @param Union|MutableUnion $existing_var_type
      * @param  string[]     $suppressed_issues
-     *
      */
     protected static function triggerIssueForImpossible(
-        Union|MutableUnion $existing_var_type,
+        $existing_var_type,
         string $old_var_type_string,
         string $key,
         Assertion $assertion,

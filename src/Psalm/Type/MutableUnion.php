@@ -314,7 +314,11 @@ final class MutableUnion implements TypeNode
         $this->exact_id = null;
     }
 
-    public function substitute(Union|MutableUnion $old_type, Union|MutableUnion|null $new_type = null): self
+    /**
+     * @param Union|MutableUnion $old_type
+     * @param Union|MutableUnion|null $new_type
+     */
+    public function substitute($old_type, $new_type = null): self
     {
         if ($this->hasMixed() && !$this->isEmptyMixed()) {
             return $this;
