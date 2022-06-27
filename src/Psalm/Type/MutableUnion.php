@@ -324,7 +324,9 @@ final class MutableUnion implements TypeNode
             return $this;
         }
         $old_type = $old_type->getBuilder();
-        $new_type = $new_type?->getBuilder();
+        if ($new_type) {
+            $new_type = $new_type->getBuilder();
+        }
 
         if ($new_type && $new_type->ignore_nullable_issues) {
             $this->ignore_nullable_issues = true;

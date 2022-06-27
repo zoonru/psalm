@@ -608,7 +608,9 @@ abstract class Type
                         }
                     }
                 }
-                $combined_type = $combined_type?->freeze();
+                if ($combined_type) {
+                    $combined_type = $combined_type->freeze();
+                }
             }
 
             //if a type is contained by the other, the intersection is the narrowest type
