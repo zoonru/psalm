@@ -44,6 +44,7 @@ class BitwiseNotAnalyzer
             $unacceptable_type = null;
             $has_valid_operand = false;
 
+            $stmt_expr_type = $stmt_expr_type->getBuilder();
             foreach ($stmt_expr_type->getAtomicTypes() as $type_string => $type_part) {
                 if ($type_part instanceof TInt || $type_part instanceof TString) {
                     if ($type_part instanceof TLiteralInt) {
@@ -59,6 +60,7 @@ class BitwiseNotAnalyzer
                         new TLiteralInt(~$type_part->value) :
                         new TInt;
 
+                    // todo:immutable this makes no sense?
                     $stmt_expr_type->removeType($type_string);
                     $stmt_expr_type->addType($type_part);
 

@@ -90,7 +90,7 @@ final class TTemplateKeyOf extends Atomic
         TemplateResult $template_result,
         ?Codebase $codebase
     ): void {
-        TemplateInferredTypeReplacer::replace(
+        $this->as = TemplateInferredTypeReplacer::replace(
             $this->as,
             $template_result,
             $codebase

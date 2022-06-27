@@ -757,7 +757,7 @@ class CallAnalyzer
 
                     if ($assertion_type) {
                         $union = new Union([clone $assertion_type]);
-                        TemplateInferredTypeReplacer::replace(
+                        $union = TemplateInferredTypeReplacer::replace(
                             $union,
                             $template_result,
                             $codebase

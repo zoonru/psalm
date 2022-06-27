@@ -77,7 +77,7 @@ class CastAnalyzer
                 }
 
                 if ($maybe_type->hasBool()) {
-                    $casted_type = clone $maybe_type;
+                    $casted_type = $maybe_type->getBuilder();
                     if (isset($casted_type->getAtomicTypes()['bool'])) {
                         $casted_type->addType(new TLiteralInt(0));
                         $casted_type->addType(new TLiteralInt(1));
@@ -94,7 +94,7 @@ class CastAnalyzer
                     $casted_type->removeType('false');
 
                     if ($casted_type->isInt()) {
-                        $valid_int_type = $casted_type;
+                        $valid_int_type = $casted_type->freeze();
                     }
                 }
 

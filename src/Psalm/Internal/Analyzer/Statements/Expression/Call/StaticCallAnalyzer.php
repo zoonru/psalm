@@ -298,9 +298,7 @@ class StaticCallAnalyzer extends CallAnalyzer
 
         if ($method_storage && $template_result) {
             foreach ($method_storage->conditionally_removed_taints as $conditionally_removed_taint) {
-                $conditionally_removed_taint = clone $conditionally_removed_taint;
-
-                TemplateInferredTypeReplacer::replace(
+                $conditionally_removed_taint = TemplateInferredTypeReplacer::replace(
                     $conditionally_removed_taint,
                     $template_result,
                     $codebase

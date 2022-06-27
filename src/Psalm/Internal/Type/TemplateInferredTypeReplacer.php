@@ -47,7 +47,7 @@ class TemplateInferredTypeReplacer
         Union $union,
         TemplateResult $template_result,
         ?Codebase $codebase
-    ): void {
+    ): Union {
         $keys_to_unset = [];
 
         $new_types = [];
@@ -207,21 +207,19 @@ class TemplateInferredTypeReplacer
             }
         }
 
-        $union->bustCache();
+        $union = $union->getBuilder();
 
         if ($is_mixed) {
             if (!$new_types) {
                 throw new UnexpectedValueException('This array should be full');
             }
 
-            $union->replaceTypes(
+            return $union->replaceTypes(
                 TypeCombiner::combine(
                     $new_types,
                     $codebase
                 )->getAtomicTypes()
-            );
-
-            return;
+            )->freeze();
         }
 
         foreach ($keys_to_unset as $key) {
@@ -230,12 +228,12 @@ class TemplateInferredTypeReplacer
 
         $atomic_types = array_values(array_merge($union->getAtomicTypes(), $new_types));
 
-        $union->replaceTypes(
+        return $union->replaceTypes(
             TypeCombiner::combine(
                 $atomic_types,
                 $codebase
             )->getAtomicTypes()
-        );
+        )->freeze();
     }
 
     /**
@@ -261,9 +259,9 @@ class TemplateInferredTypeReplacer
             $template_type = $traversed_type;
 
             if (!$atomic_type->as->isMixed() && $template_type->isMixed()) {
-                $template_type = clone $atomic_type->as;
+                $template_type = $atomic_type->as->getBuilder();
             } else {
-                $template_type = clone $template_type;
+                $template_type = $template_type->getBuilder();
             }
 
             if ($atomic_type->extra_types) {
@@ -289,6 +287,7 @@ class TemplateInferredTypeReplacer
                     }
                 }
             }
+            $template_type = $template_type->freeze();
         } elseif ($codebase) {
             foreach ($inferred_lower_bounds as $template_type_map) {
                 foreach ($template_type_map as $template_class => $_) {
@@ -410,7 +409,7 @@ class TemplateInferredTypeReplacer
         $atomic_type = clone $atomic_type;
 
         if ($template_type) {
-            self::replace(
+            $atomic_type->as_type = self::replace(
                 $atomic_type->as_type,
                 $template_result,
                 $codebase
@@ -478,7 +477,7 @@ class TemplateInferredTypeReplacer
                     )
                 ];
 
-                self::replace(
+                $if_template_type = self::replace(
                     $if_template_type,
                     $refined_template_result,
                     $codebase
@@ -508,7 +507,7 @@ class TemplateInferredTypeReplacer
                     )
                 ];
 
-                self::replace(
+                $else_template_type = self::replace(
                     $else_template_type,
                     $refined_template_result,
                     $codebase
@@ -517,13 +516,13 @@ class TemplateInferredTypeReplacer
         }
 
         if (!$if_template_type && !$else_template_type) {
-            self::replace(
+            $atomic_type->if_type = self::replace(
                 $atomic_type->if_type,
                 $template_result,
                 $codebase
             );
 
-            self::replace(
+            $atomic_type->else_type = self::replace(
                 $atomic_type->else_type,
                 $template_result,
                 $codebase

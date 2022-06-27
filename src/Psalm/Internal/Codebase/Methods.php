@@ -495,7 +495,7 @@ class Methods
                     if ($params[$i]->signature_type
                         && $params[$i]->signature_type->isNullable()
                     ) {
-                        $params[$i]->type->addType(new TNull);
+                        $params[$i]->type = $params[$i]->type->getBuilder()->addType(new TNull)->freeze();
                     }
 
                     $params[$i]->type_location = $overridden_storage->params[$i]->type_location;
@@ -521,7 +521,7 @@ class Methods
             return $type;
         }
 
-        $type = clone $type;
+        $type = $type->getBuilder();
 
         foreach ($type->getAtomicTypes() as $key => $atomic_type) {
             if ($atomic_type instanceof TTemplateParam
@@ -619,9 +619,7 @@ class Methods
             }
         }
 
-        $type->bustCache();
-
-        return $type;
+        return $type->freeze();
     }
 
     /**

@@ -361,7 +361,7 @@ class MethodComparator
                 $guide_param_signature_type = $guide_param->type;
 
                 $or_null_guide_param_signature_type = $guide_param->signature_type
-                    ? clone $guide_param->signature_type
+                    ? $guide_param->signature_type->getBuilder()
                     : null;
 
                 if ($or_null_guide_param_signature_type) {
@@ -728,29 +728,35 @@ class MethodComparator
             }
         }
 
-        foreach ($implementer_method_storage_param_type->getAtomicTypes() as $k => $t) {
+        $temp = $implementer_method_storage_param_type->getBuilder();
+        foreach ($temp->getAtomicTypes() as $k => $t) {
             if ($t instanceof TTemplateParam
                 && strpos($t->defining_class, 'fn-') === 0
             ) {
-                $implementer_method_storage_param_type->removeType($k);
+                $temp->removeType($k);
 
                 foreach ($t->as->getAtomicTypes() as $as_t) {
-                    $implementer_method_storage_param_type->addType($as_t);
+                    $temp->addType($as_t);
                 }
             }
         }
+        $implementer_method_storage_param_type = $temp->freeze();
+        unset($temp);
 
-        foreach ($guide_method_storage_param_type->getAtomicTypes() as $k => $t) {
+        $temp = $guide_method_storage_param_type->getBuilder();
+        foreach ($temp->getAtomicTypes() as $k => $t) {
             if ($t instanceof TTemplateParam
                 && strpos($t->defining_class, 'fn-') === 0
             ) {
-                $guide_method_storage_param_type->removeType($k);
+                $temp->removeType($k);
 
                 foreach ($t->as->getAtomicTypes() as $as_t) {
-                    $guide_method_storage_param_type->addType($as_t);
+                    $temp->addType($as_t);
                 }
             }
         }
+        $guide_method_storage_param_type = $temp->freeze();
+        unset($temp);
 
         if ($implementer_classlike_storage->template_extended_params) {
             self::transformTemplates(
@@ -1058,7 +1064,7 @@ class MethodComparator
     private static function transformTemplates(
         array $template_extended_params,
         string $base_class_name,
-        Union $templated_type,
+        Union &$templated_type,
         Codebase $codebase
     ): void {
         if (isset($template_extended_params[$base_class_name])) {
@@ -1095,7 +1101,7 @@ class MethodComparator
 
             $template_result = new TemplateResult([], $template_types);
 
-            TemplateInferredTypeReplacer::replace(
+            $templated_type = TemplateInferredTypeReplacer::replace(
                 $templated_type,
                 $template_result,
                 $codebase

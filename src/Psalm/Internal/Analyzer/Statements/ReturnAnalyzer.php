@@ -285,9 +285,7 @@ class ReturnAnalyzer
                                 unset($found_generic_params[$template_name][$fq_class_name]);
                             }
 
-                            $local_return_type = clone $local_return_type;
-
-                            TemplateInferredTypeReplacer::replace(
+                            $local_return_type = TemplateInferredTypeReplacer::replace(
                                 $local_return_type,
                                 new TemplateResult([], $found_generic_params),
                                 $codebase
