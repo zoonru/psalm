@@ -153,6 +153,7 @@ class FormulaGenerator
                         $redefined = false;
 
                         if ($var[0] === '=') {
+                            /** @var string */
                             $var = substr($var, 1);
                             $redefined = true;
                         }
@@ -423,6 +424,7 @@ class FormulaGenerator
                 $redefined = false;
 
                 if ($var[0] === '=') {
+                    /** @var string */
                     $var = substr($var, 1);
                     $redefined = true;
                 }

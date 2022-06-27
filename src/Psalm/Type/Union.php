@@ -197,7 +197,11 @@ final class Union implements TypeNode
 
     public function getBuilder(): MutableUnion
     {
-        $union = new MutableUnion($this->getAtomicTypes());
+        $types = [];
+        foreach ($this->getAtomicTypes() as $type) {
+            $types []= clone $type;
+        }
+        $union = new MutableUnion($types);
         foreach (get_object_vars($this) as $key => $value) {
             if ($key === 'types') {
                 continue;
