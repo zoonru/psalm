@@ -523,10 +523,10 @@ class ArrayFetchAnalyzer
                 $statements_analyzer,
                 $stmt,
                 $array_type,
-                $offset_type
+                $offset_type->freeze()
             );
         }
-        
+
         if ($offset_type->isNullable() && !$context->inside_isset) {
             if (!$offset_type->ignore_nullable_issues) {
                 IssueBuffer::maybeAdd(
@@ -921,7 +921,7 @@ class ArrayFetchAnalyzer
             }
         }
     }
-    
+
     private static function checkLiteralIntArrayOffset(
         Union $offset_type,
         Union $expected_offset_type,
