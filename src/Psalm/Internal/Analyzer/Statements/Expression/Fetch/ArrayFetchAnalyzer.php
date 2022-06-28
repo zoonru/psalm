@@ -461,7 +461,7 @@ class ArrayFetchAnalyzer
     public static function getArrayAccessTypeGivenOffset(
         StatementsAnalyzer $statements_analyzer,
         PhpParser\Node\Expr\ArrayDimFetch $stmt,
-        Union $array_type,
+        Union &$array_type,
         Union &$offset_type_original,
         bool $in_assignment,
         ?string $extended_var_id,
