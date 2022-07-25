@@ -300,7 +300,6 @@ class ArrayFetchAnalyzer
                             $new_offset_type->removeType($offset_key);
                         }
                     }
-
                     $new_offset_type = $new_offset_type->freeze();
                 }
             }
@@ -507,6 +506,7 @@ class ArrayFetchAnalyzer
 
         $array_access_type = null;
 
+        $offset_type = $offset_type_original->getBuilder();
         if ($offset_type->isNull()) {
             IssueBuffer::maybeAdd(
                 new NullArrayOffset(
@@ -527,10 +527,10 @@ class ArrayFetchAnalyzer
                 $statements_analyzer,
                 $stmt,
                 $array_type,
-                $offset_type
+                $offset_type->freeze()
             );
         }
-        
+
         if ($offset_type->isNullable() && !$context->inside_isset) {
             if (!$offset_type->ignore_nullable_issues) {
                 IssueBuffer::maybeAdd(
@@ -554,7 +554,7 @@ class ArrayFetchAnalyzer
 
         if ($array_type->isArray()) {
             $has_valid_absolute_offset = self::checkArrayOffsetType(
-                $offset_type,
+                $offset_type->freeze(),
                 $offset_type->getAtomicTypes(),
                 $codebase
             );
@@ -638,7 +638,8 @@ class ArrayFetchAnalyzer
                 || $type instanceof TList
                 || $type instanceof TClassStringMap
             ) {
-                self::handleArrayAccessOnArray(
+                $offset_type_original = $offset_type->freeze();
+                $array_type = self::handleArrayAccessOnArray(
                     $in_assignment,
                     $type,
                     $key_values,
@@ -646,7 +647,7 @@ class ArrayFetchAnalyzer
                     $type_string,
                     $stmt,
                     $replacement_type,
-                    $offset_type,
+                    $offset_type_original,
                     $original_type,
                     $codebase,
                     $extended_var_id,
@@ -657,6 +658,7 @@ class ArrayFetchAnalyzer
                     $has_array_access,
                     $has_valid_expected_offset
                 );
+                $offset_type = $offset_type_original->getBuilder();
 
                 continue;
             }
@@ -670,7 +672,7 @@ class ArrayFetchAnalyzer
                     $context,
                     $replacement_type,
                     $type,
-                    $offset_type,
+                    $offset_type->freeze(),
                     $expected_offset_types,
                     $array_access_type,
                     $has_valid_expected_offset
@@ -925,7 +927,7 @@ class ArrayFetchAnalyzer
             }
         }
     }
-    
+
     private static function checkLiteralIntArrayOffset(
         MutableUnion $offset_type,
         Union $expected_offset_type,
@@ -1152,8 +1154,9 @@ class ArrayFetchAnalyzer
         ?Union &$array_access_type,
         bool &$has_array_access,
         bool &$has_valid_offset
-    ): void {
+    ): Union {
         $has_array_access = true;
+        $array_type = $array_type->getBuilder();
 
         if ($in_assignment) {
             if ($type instanceof TArray) {
@@ -1185,7 +1188,7 @@ class ArrayFetchAnalyzer
                 } elseif (!$stmt->dim && $from_empty_array && $replacement_type) {
                     $array_type->removeType($type_string);
                     $array_type->addType(new TNonEmptyList($replacement_type));
-                    return;
+                    return $array_type->freeze();
                 }
             } elseif ($type instanceof TKeyedArray
                 && $type->previous_value_type
@@ -1206,6 +1209,7 @@ class ArrayFetchAnalyzer
             $type = new TArray([Type::getInt(), $type->type_param]);
         }
 
+        $array_type = $array_type->freeze();
         if ($type instanceof TArray) {
             self::handleArrayAccessOnTArray(
                 $statements_analyzer,
@@ -1247,7 +1251,7 @@ class ArrayFetchAnalyzer
                 $array_access_type
             );
         } else {
-            self::handleArrayAccessOnKeyedArray(
+            $array_type = self::handleArrayAccessOnKeyedArray(
                 $statements_analyzer,
                 $codebase,
                 $key_values,
@@ -1269,6 +1273,8 @@ class ArrayFetchAnalyzer
         if ($context->inside_isset) {
             $offset_type->ignore_isset = true;
         }
+
+        return $array_type;
     }
 
     /**
@@ -1544,7 +1550,7 @@ class ArrayFetchAnalyzer
         array &$expected_offset_types,
         string $type_string,
         bool &$has_valid_offset
-    ): void {
+    ): Union {
         $generic_key_type = $type->getGenericKeyType();
 
         if (!$stmt->dim && $type->sealed && $type->is_list) {
@@ -1678,6 +1684,7 @@ class ArrayFetchAnalyzer
 
                     $property_count = $type->sealed ? count($type->properties) : null;
 
+                    $array_type = $array_type->getBuilder();
                     if (!$stmt->dim && $property_count) {
                         ++$property_count;
                         $array_type->removeType($type_string);
@@ -1701,6 +1708,7 @@ class ArrayFetchAnalyzer
 
                         $array_type->addType($type);
                     }
+                    $array_type = $array_type->freeze();
 
                     $array_access_type = Type::combineUnionTypes(
                         $array_access_type,
@@ -1724,6 +1732,7 @@ class ArrayFetchAnalyzer
                 $array_access_type = Type::getMixed();
             }
         }
+        return $array_type;
     }
 
     /**

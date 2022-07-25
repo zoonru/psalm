@@ -47,6 +47,13 @@ final class TIterable extends Atomic
         }
     }
 
+    public function __clone()
+    {
+        $this->cloneIntersection();
+        $this->type_params[0] = clone $this->type_params[0];
+        $this->type_params[1] = clone $this->type_params[1];
+    }
+
     public function getKey(bool $include_extra = true): string
     {
         if ($include_extra && $this->extra_types) {

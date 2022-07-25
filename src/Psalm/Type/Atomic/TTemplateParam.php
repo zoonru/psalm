@@ -39,6 +39,12 @@ final class TTemplateParam extends Atomic
         $this->defining_class = $defining_class;
     }
 
+    public function __clone()
+    {
+        $this->cloneIntersection();
+        $this->as = clone $this->as;
+    }
+
     public function getKey(bool $include_extra = true): string
     {
         if ($include_extra && $this->extra_types) {
