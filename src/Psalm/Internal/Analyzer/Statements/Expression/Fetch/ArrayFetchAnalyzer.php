@@ -43,7 +43,6 @@ use Psalm\Issue\PossiblyNullArrayOffset;
 use Psalm\Issue\PossiblyUndefinedArrayOffset;
 use Psalm\Issue\PossiblyUndefinedIntArrayOffset;
 use Psalm\Issue\PossiblyUndefinedStringArrayOffset;
-use Psalm\Issue\RedundantCondition;
 use Psalm\IssueBuffer;
 use Psalm\Node\Expr\VirtualConstFetch;
 use Psalm\Node\Expr\VirtualMethodCall;

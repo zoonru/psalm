@@ -11,6 +11,7 @@ use function fwrite;
 use function ini_set;
 use function set_error_handler;
 use function set_exception_handler;
+use function str_contains;
 
 use const E_ALL;
 use const E_STRICT;

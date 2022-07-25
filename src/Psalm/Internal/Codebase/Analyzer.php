@@ -31,11 +31,13 @@ use function array_filter;
 use function array_intersect_key;
 use function array_merge;
 use function array_values;
+use function arsort;
 use function count;
 use function explode;
 use function implode;
 use function intdiv;
 use function ksort;
+use function microtime;
 use function number_format;
 use function pathinfo;
 use function preg_replace;
@@ -355,8 +357,7 @@ class Analyzer
             /**
              * @param array{0: float, 1: string} $issues
              */
-            function (array $issues) use (&$times): void
-            {
+            function (array $issues) use (&$times): void {
                 $times[$issues[1]] = $issues[0];
             }
         ;
