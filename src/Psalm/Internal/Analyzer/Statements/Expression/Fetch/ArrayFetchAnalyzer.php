@@ -525,7 +525,7 @@ class ArrayFetchAnalyzer
             self::validateArrayOffset(
                 $statements_analyzer,
                 $stmt,
-                $array_type,
+                $array_type->freeze(),
                 $offset_type->freeze()
             );
         }
