@@ -81,10 +81,10 @@ class PartialParserVisitor extends PhpParser\NodeVisitorAbstract
         if ($cs = $node->getComments()) {
             $stmt_start_pos = $cs[0]->getStartFilePos();
         } else {
-            $stmt_start_pos = $attrs['startFilePos'];
+            $stmt_start_pos = $attrs['startFilePos'] ?? 0;
         }
 
-        $stmt_end_pos = $attrs['endFilePos'];
+        $stmt_end_pos = $attrs['endFilePos'] ?? 0;
 
         $start_offset = 0;
         $end_offset = 0;

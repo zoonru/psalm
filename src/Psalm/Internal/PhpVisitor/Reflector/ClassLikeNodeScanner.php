@@ -1568,19 +1568,19 @@ class ClassLikeNodeScanner
             $property_storage->allow_private_mutation = $var_comment ? $var_comment->allow_private_mutation : false;
             $property_storage->description = $var_comment ? $var_comment->description : null;
 
-            if (!$signature_type && !$doc_var_group_type) {
-                if ($property->default) {
-                    $property_storage->suggested_type = SimpleTypeInferer::infer(
-                        $this->codebase,
-                        new NodeDataProvider(),
-                        $property->default,
-                        $this->aliases,
-                        null,
-                        $existing_constants,
-                        $fq_classlike_name
-                    );
-                }
+            if ($property->default) {
+                $property_storage->suggested_type = SimpleTypeInferer::infer(
+                    $this->codebase,
+                    new NodeDataProvider(),
+                    $property->default,
+                    $this->aliases,
+                    null,
+                    $existing_constants,
+                    $fq_classlike_name
+                );
+            }
 
+            if (!$signature_type && !$doc_var_group_type) {
                 $property_storage->type = null;
             } else {
                 if ($var_comment

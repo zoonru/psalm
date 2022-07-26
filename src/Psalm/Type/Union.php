@@ -156,13 +156,6 @@ final class Union implements TypeNode
     public $possibly_undefined_from_try = false;
 
     /**
-     * Whether or not this union had a template, since replaced
-     *
-     * @var bool
-     */
-    public $had_template = false;
-
-    /**
      * Whether or not this union comes from a template "as" default
      *
      * @var bool
@@ -197,6 +190,13 @@ final class Union implements TypeNode
      * @var bool
      */
     public $by_ref = false;
+
+    /**
+     * Whether or not this union had a template, since replaced
+     *
+     * @var bool
+     */
+    public $had_template = false;
 
     /**
      * @var bool

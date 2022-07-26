@@ -201,8 +201,7 @@ class MethodComparator
             );
         }
 
-        if ($guide_classlike_storage->user_defined
-            && ($guide_classlike_storage->is_interface
+        if (($guide_classlike_storage->is_interface
                 || $guide_classlike_storage->preserve_constructor_signature
                 || $implementer_method_storage->cased_name !== '__construct')
             && $implementer_method_storage->required_param_count > $guide_method_storage->required_param_count
@@ -524,7 +523,7 @@ class MethodComparator
             );
         }
 
-        if ($guide_classlike_storage->user_defined && $implementer_param->by_ref !== $guide_param->by_ref) {
+        if ($implementer_param->by_ref !== $guide_param->by_ref) {
             $config = Config::getInstance();
 
             IssueBuffer::maybeAdd(
@@ -884,7 +883,11 @@ class MethodComparator
                 $implementer_signature_return_type,
                 $guide_signature_return_type
             )
-            : UnionTypeComparator::isContainedByInPhp($implementer_signature_return_type, $guide_signature_return_type);
+            : (!$implementer_signature_return_type
+                && $guide_signature_return_type->isMixed()
+                ? false
+                : UnionTypeComparator::isContainedByInPhp($implementer_signature_return_type, $guide_signature_return_type)
+            );
 
         if (!$is_contained_by) {
             if ($codebase->analysis_php_version_id >= 8_00_00
