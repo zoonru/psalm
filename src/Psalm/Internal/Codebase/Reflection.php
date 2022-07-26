@@ -311,6 +311,9 @@ class Reflection
             $storage->setParams($callables[0]->params);
 
             $storage->return_type = $callables[0]->return_type;
+            if ($this->codebase->analysis_php_version_id >= 80100) {
+                $storage->signature_return_type = $storage->return_type;
+            }
             $storage->return_type->queueClassLikesForScanning($this->codebase);
         } else {
             $params = $method->getParameters();
@@ -429,7 +432,6 @@ class Reflection
         if ($reflection_type instanceof ReflectionNamedType) {
             $type = $reflection_type->getName();
         } elseif ($reflection_type instanceof ReflectionUnionType) {
-            /** @psalm-suppress MixedArgument */
             $type = implode(
                 '|',
                 array_map(

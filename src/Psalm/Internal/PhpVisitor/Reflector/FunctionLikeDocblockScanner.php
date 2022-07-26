@@ -45,6 +45,8 @@ use Psalm\Type\Atomic\TNull;
 use Psalm\Type\Atomic\TTemplateParam;
 use Psalm\Type\TaintKindGroup;
 use Psalm\Type\Union;
+use SplDoublyLinkedList;
+use SplQueue;
 
 use function array_filter;
 use function array_merge;
@@ -1013,6 +1015,25 @@ class FunctionLikeDocblockScanner
                         $storage->return_type = $storage->return_type->getBuilder()->addType(new TNull())->freeze();
                     }
                 }
+            } elseif ($classlike_storage
+                && !$classlike_storage->user_defined
+                && $codebase->analysis_php_version_id >= 80100
+                && !$storage->signature_return_type
+            ) {
+                $new = [];
+                $queue = new SplQueue;
+                $queue->enqueue($storage->return_type->getAtomicTypes());
+                $queue->setIteratorMode(SplDoublyLinkedList::IT_MODE_FIFO | SplDoublyLinkedList::IT_MODE_DELETE);
+                foreach ($queue as $types) {
+                    foreach ($types as $t) {
+                        if ($t instanceof TTemplateParam) {
+                            $queue->enqueue($t->as->getAtomicTypes());
+                        } else {
+                            $new []= $t;
+                        }
+                    }
+                }
+                $storage->signature_return_type = new Union($new);
             }
 
             $storage->return_type->queueClassLikesForScanning($codebase, $file_storage);

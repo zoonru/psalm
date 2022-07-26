@@ -138,6 +138,7 @@ final class TObjectWithProperties extends TObject
 
     public function __clone()
     {
+        $this->cloneIntersection();
         foreach ($this->properties as &$property) {
             $property = clone $property;
         }
