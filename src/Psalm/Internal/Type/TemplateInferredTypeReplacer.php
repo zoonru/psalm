@@ -207,7 +207,7 @@ class TemplateInferredTypeReplacer
             }
         }
 
-        $union = $union->getBuilder();
+        $union->bustCache();
 
         if ($is_mixed) {
             if (!$new_types) {

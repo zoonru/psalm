@@ -1687,8 +1687,8 @@ class ArrayFetchAnalyzer
     public static function validateArrayOffset(
         StatementsAnalyzer $statements_analyzer,
         Expr $stmt,
-        Type\Union|Type\MutableUnion $array_type,
-        Type\Union|Type\MutableUnion $offset_type
+        Type\Union $array_type,
+        Type\Union $offset_type
     ): void {
         $all_arrays_shaped = true;
         $exact_keys = null;
