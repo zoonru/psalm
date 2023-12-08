@@ -515,9 +515,8 @@ final class FunctionLikeDocblockScanner
 
             if ($token_body === 'func_num_args()') {
                 $template_name = 'TFunctionArgCount';
-
                 $storage->template_types[$template_name] = [
-                    $template_function_id => Type::getInt(),
+                    'fn-' . strtolower($storage->cased_name ?? '') => Type::getInt(),
                 ];
 
                 $function_template_types[$template_name]
@@ -530,7 +529,7 @@ final class FunctionLikeDocblockScanner
                 $template_name = 'TPhpMajorVersion';
 
                 $storage->template_types[$template_name] = [
-                    $template_function_id => Type::getInt(),
+                    'fn-' . strtolower($storage->cased_name ?? '') => Type::getInt(),
                 ];
 
                 $function_template_types[$template_name]
@@ -543,7 +542,7 @@ final class FunctionLikeDocblockScanner
                 $template_name = 'TPhpVersionId';
 
                 $storage->template_types[$template_name] = [
-                    $template_function_id => Type::getInt(),
+                    'fn-' . strtolower($storage->cased_name ?? '') => Type::getInt(),
                 ];
 
                 $function_template_types[$template_name]
