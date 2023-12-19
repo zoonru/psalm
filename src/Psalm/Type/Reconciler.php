@@ -341,7 +341,7 @@ class Reconciler
             if ($type_changed || $failed_reconciliation) {
                 $changed_var_ids[$key] = true;
 
-                if (substr($key, -1) === ']'
+                if (str_ends_with($key, ']')
                     && !$has_inverted_isset
                     && !$has_inverted_key_exists
                     && !$has_empty
