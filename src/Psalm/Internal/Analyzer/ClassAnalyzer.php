@@ -1091,8 +1091,11 @@ final class ClassAnalyzer extends ClassLikeAnalyzer
             $uninitialized_variables[] = '$this->' . $property_name;
             $uninitialized_properties[$property_class_name . '::$' . $property_name] = $property;
 
-            if ($property->type && !$property->type->isMixed()) {
-                $uninitialized_typed_properties[$property_class_name . '::$' . $property_name] = $property;
+            if ($property->type) {
+                // Complain about all natively typed properties and all non-mixed docblock typed properties
+                if (!$property->type->from_docblock || !$property->type->isMixed()) {
+                    $uninitialized_typed_properties[$property_class_name . '::$' . $property_name] = $property;
+                }
             }
         }
 
@@ -1192,7 +1195,7 @@ final class ClassAnalyzer extends ClassLikeAnalyzer
                 $fake_stmt = new VirtualClassMethod(
                     new VirtualIdentifier('__construct'),
                     [
-                        'type' => PhpParser\Node\Stmt\Class_::MODIFIER_PUBLIC,
+                        'flags' => PhpParser\Modifiers::PUBLIC,
                         'params' => $fake_constructor_params,
                         'stmts' => $fake_constructor_stmts,
                     ],
@@ -1610,7 +1613,11 @@ final class ClassAnalyzer extends ClassLikeAnalyzer
 
         $allow_native_type = !$docblock_only
             && $codebase->analysis_php_version_id >= 7_04_00
-            && $codebase->allow_backwards_incompatible_changes;
+            && $codebase->allow_backwards_incompatible_changes
+            // PHP does not support callable properties, but does allow Closure properties
+            // hasCallableType() treats Closure as a callable, but getCallableTypes() does not
+            && $inferred_type->getCallableTypes() === []
+            ;
 
         $manipulator->setType(
             $allow_native_type
@@ -2447,7 +2454,8 @@ final class ClassAnalyzer extends ClassLikeAnalyzer
 
         $seen_values = [];
         foreach ($storage->enum_cases as $case_storage) {
-            if ($case_storage->value !== null && $storage->enum_type === null) {
+            $case_value = $case_storage->getValue($this->getCodebase()->classlikes);
+            if ($case_value !== null && $storage->enum_type === null) {
                 IssueBuffer::maybeAdd(
                     new InvalidEnumCaseValue(
                         'Case of a non-backed enum should not have a value',
@@ -2455,7 +2463,7 @@ final class ClassAnalyzer extends ClassLikeAnalyzer
                         $storage->name,
                     ),
                 );
-            } elseif ($case_storage->value === null && $storage->enum_type !== null) {
+            } elseif ($case_value === null && $storage->enum_type !== null) {
                 IssueBuffer::maybeAdd(
                     new InvalidEnumCaseValue(
                         'Case of a backed enum should have a value',
@@ -2463,9 +2471,9 @@ final class ClassAnalyzer extends ClassLikeAnalyzer
                         $storage->name,
                     ),
                 );
-            } elseif ($case_storage->value !== null) {
-                if (($case_storage->value instanceof TLiteralInt && $storage->enum_type === 'string')
-                    || ($case_storage->value instanceof TLiteralString && $storage->enum_type === 'int')
+            } elseif ($case_value !== null) {
+                if (($case_value instanceof TLiteralInt && $storage->enum_type === 'string')
+                    || ($case_value instanceof TLiteralString && $storage->enum_type === 'int')
                 ) {
                     IssueBuffer::maybeAdd(
                         new InvalidEnumCaseValue(
@@ -2477,8 +2485,8 @@ final class ClassAnalyzer extends ClassLikeAnalyzer
                 }
             }
 
-            if ($case_storage->value !== null) {
-                if (in_array($case_storage->value->value, $seen_values, true)) {
+            if ($case_value !== null) {
+                if (in_array($case_value->value, $seen_values, true)) {
                     IssueBuffer::maybeAdd(
                         new DuplicateEnumCaseValue(
                             'Enum case values should be unique',
@@ -2487,7 +2495,7 @@ final class ClassAnalyzer extends ClassLikeAnalyzer
                         ),
                     );
                 } else {
-                    $seen_values[] = $case_storage->value->value;
+                    $seen_values[] = $case_value->value;
                 }
             }
         }

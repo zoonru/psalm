@@ -779,8 +779,31 @@ class FunctionCallTest extends TestCase
                     }',
             ],
             'allowPossiblyUndefinedClassInClassExists' => [
-                'code' => '<?php
-                    if (class_exists(Foo::class)) {}',
+                'code' => <<<'PHP'
+                    <?php
+                    if (class_exists(Foo::class)) {}
+                    PHP,
+            ],
+            'allowPossiblyUndefinedClassInInterfaceExists' => [
+                'code' => <<<'PHP'
+                    <?php
+                    if (interface_exists(Foo::class)) {}
+                    PHP,
+            ],
+            'allowPossiblyUndefinedClassInTraitExists' => [
+                'code' => <<<'PHP'
+                    <?php
+                    if (trait_exists(Foo::class)) {}
+                    PHP,
+            ],
+            'allowPossiblyUndefinedClassInEnumExists' => [
+                'code' => <<<'PHP'
+                    <?php
+                    if (enum_exists(Foo::class)) {}
+                    PHP,
+                'assertions' => [],
+                'ignored_issues' => [],
+                'php_version' => '8.1',
             ],
             'allowConstructorAfterClassExists' => [
                 'code' => '<?php
@@ -1120,6 +1143,24 @@ class FunctionCallTest extends TestCase
                     }
                     function filterFloatWithDefault(string $s) : float {
                         return filter_var($s, FILTER_VALIDATE_FLOAT, ["options" => ["default" => 5.0]]);
+                    }
+
+                    /**
+                     * @param mixed $c
+                     * @return int<1, 100>|stdClass|array<never, never>
+                     */
+                    function filterNumericIntWithDefault($c) {
+                        if (is_numeric($c)) {
+                            return filter_var($c, FILTER_VALIDATE_INT, [
+                             "options" => [
+                                "default"   => new stdClass(),
+                                "min_range" => 1,
+                                "max_range" => 100,
+                            ],
+                            ]);
+                        }
+
+                        return array();
                     }',
             ],
             'callVariableVar' => [
@@ -1648,6 +1689,14 @@ class FunctionCallTest extends TestCase
                             return true;
                         }
                     }',
+            ],
+            'callableArgumentWithFunctionExists' => [
+                'code' => <<<'PHP'
+                    <?php
+                    if (function_exists('foo')) {
+                        register_shutdown_function('foo');
+                    }
+                    PHP,
             ],
             'pregMatch' => [
                 'code' => '<?php

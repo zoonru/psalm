@@ -720,7 +720,7 @@ class PropertyTypeTest extends TestCase
                     $a = new DOMElement("foo");
                     $owner = $a->ownerDocument;',
                 'assertions' => [
-                    '$owner' => 'DOMDocument|null',
+                    '$owner' => 'DOMDocument',
                 ],
             ],
             'propertyMapHydration' => [
@@ -1168,7 +1168,7 @@ class PropertyTypeTest extends TestCase
                          * Constructs a finally node.
                          *
                          * @param list<Node\Stmt> $stmts      Statements
-                         * @param array  $attributes Additional attributes
+                         * @param array<string, mixed>  $attributes Additional attributes
                          */
                         public function __construct(array $stmts = array(), array $attributes = array()) {
                             parent::__construct($attributes);
@@ -3828,6 +3828,15 @@ class PropertyTypeTest extends TestCase
                     (new A)->prop = 42;
                 ',
                 'error_message' => 'UndefinedPropertyAssignment',
+            ],
+            'nativeMixedPropertyWithNoConstructor' => [
+                'code' => <<< 'PHP'
+                    <?php
+                    class A {
+                        public mixed $foo;
+                    }
+                PHP,
+                'error_message' => 'MissingConstructor',
             ],
         ];
     }

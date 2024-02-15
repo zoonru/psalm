@@ -181,6 +181,9 @@ final class Codebase
 
     public bool $diff_methods = false;
 
+    /** whether or not we only checked a part of the codebase */
+    public bool $diff_run = false;
+
     /**
      * @var array<lowercase-string, string>
      */
@@ -1735,6 +1738,8 @@ final class Codebase
     /**
      * @param list<CompletionItem> $items
      * @return list<CompletionItem>
+     * @deprecated to be removed in Psalm 6
+     * @api fix deprecation problem "PossiblyUnusedMethod: Cannot find any calls to method"
      */
     public function filterCompletionItemsByBeginLiteralPart(array $items, string $literal_part): array
     {

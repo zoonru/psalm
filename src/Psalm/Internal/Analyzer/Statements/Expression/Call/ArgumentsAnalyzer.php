@@ -191,7 +191,7 @@ final class ArgumentsAnalyzer
 
             $toggled_class_exists = false;
 
-            if ($method_id === 'class_exists'
+            if (in_array($method_id, ['class_exists', 'interface_exists', 'enum_exists', 'trait_exists'], true)
                 && $argument_offset === 0
                 && !$context->inside_class_exists
             ) {
@@ -237,7 +237,7 @@ final class ArgumentsAnalyzer
                 $context,
                 false,
                 null,
-                false,
+                null,
                 $high_order_template_result,
             ) === false) {
                 $context->inside_call = $was_inside_call;
@@ -1171,7 +1171,7 @@ final class ArgumentsAnalyzer
             || $arg->value instanceof PhpParser\Node\Expr\Array_
             || $arg->value instanceof PhpParser\Node\Expr\BinaryOp
             || $arg->value instanceof PhpParser\Node\Expr\Ternary
-            || $arg->value instanceof PhpParser\Node\Scalar\Encapsed
+            || $arg->value instanceof PhpParser\Node\Scalar\InterpolatedString
             || $arg->value instanceof PhpParser\Node\Expr\PostInc
             || $arg->value instanceof PhpParser\Node\Expr\PostDec
             || $arg->value instanceof PhpParser\Node\Expr\PreInc

@@ -19,6 +19,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
 use PhpParser\NodeVisitorAbstract;
 use PhpParser\Parser;
+use PhpParser\PhpVersion;
 use Psalm\CodeLocation\ParseErrorLocation;
 use Psalm\Codebase;
 use Psalm\Config;
@@ -86,8 +87,6 @@ final class StatementsProvider
      * @var array<string, array<int, array{int, int}>>
      */
     private array $deletion_ranges = [];
-
-    private static ?Emulative $lexer = null;
 
     private static ?Parser $parser = null;
 
@@ -388,21 +387,11 @@ final class StatementsProvider
         ?array  $existing_statements = null,
         ?array  $file_changes = null,
     ): array {
-        $attributes = [
-            'comments', 'startLine', 'startFilePos', 'endFilePos',
-        ];
-
-        if (!self::$lexer) {
+        if (!self::$parser) {
             $major_version = Codebase::transformPhpVersionId($analysis_php_version_id, 10_000);
             $minor_version = Codebase::transformPhpVersionId($analysis_php_version_id % 10_000, 100);
-            self::$lexer = new Emulative([
-                'usedAttributes' => $attributes,
-                'phpVersion' => $major_version . '.' . $minor_version,
-            ]);
-        }
-
-        if (!self::$parser) {
-            self::$parser = (new PhpParser\ParserFactory())->create(PhpParser\ParserFactory::ONLY_PHP7, self::$lexer);
+            $php_version = PhpVersion::fromComponents($major_version, $minor_version);
+            self::$parser = (new PhpParser\ParserFactory())->createForVersion($php_version);
         }
 
         $used_cached_statements = false;
@@ -530,11 +519,6 @@ final class StatementsProvider
         $resolving_traverser->traverse($stmts);
 
         return $stmts;
-    }
-
-    public static function clearLexer(): void
-    {
-        self::$lexer = null;
     }
 
     public static function clearParser(): void

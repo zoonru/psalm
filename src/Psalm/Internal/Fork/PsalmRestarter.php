@@ -10,6 +10,7 @@ use function array_filter;
 use function array_merge;
 use function array_splice;
 use function assert;
+use function defined;
 use function extension_loaded;
 use function file_get_contents;
 use function file_put_contents;
@@ -102,6 +103,11 @@ final class PsalmRestarter extends XdebugHandler
             }
         }
 
+        // opcache.save_comments is required for json mapper (used in language server) to work
+        if ($opcache_loaded && in_array(ini_get('opcache.save_comments'), ['0', 'false', 0, false])) {
+            return true;
+        }
+
         return $default || $this->required;
     }
 
@@ -144,7 +150,7 @@ final class PsalmRestarter extends XdebugHandler
     protected function restart($command): void
     {
         if ($this->required && $this->tmpIni) {
-            $regex = '/^\s*(extension\s*=.*(' . implode('|', $this->disabled_extensions) . ').*)$/mi';
+            $regex = '/^\s*((?:zend_)?extension\s*=.*(' . implode('|', $this->disabled_extensions) . ').*)$/mi';
             $content = file_get_contents($this->tmpIni);
             assert($content !== false);
 
@@ -153,9 +159,13 @@ final class PsalmRestarter extends XdebugHandler
             file_put_contents($this->tmpIni, $content);
         }
 
-            $additional_options = [];
+        $additional_options = [];
         foreach (self::REQUIRED_OPCACHE_SETTINGS as $key => $value) {
             $additional_options []= "-dopcache.{$key}={$value}";
+        }
+
+        if ($opcache_loaded) {
+            $additional_options[] = '-dopcache.save_comments=1';
         }
 
         array_splice(
