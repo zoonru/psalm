@@ -164,9 +164,7 @@ final class PsalmRestarter extends XdebugHandler
             $additional_options []= "-dopcache.{$key}={$value}";
         }
 
-        if ($opcache_loaded) {
-            $additional_options[] = '-dopcache.save_comments=1';
-        }
+        $additional_options[] = '-dopcache.save_comments=1';
 
         array_splice(
             $command,
