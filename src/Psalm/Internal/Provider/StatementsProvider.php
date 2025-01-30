@@ -6,7 +6,6 @@ namespace Psalm\Internal\Provider;
 
 use PhpParser;
 use PhpParser\ErrorHandler\Collecting;
-use PhpParser\Lexer\Emulative;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\ArrayDimFetch;

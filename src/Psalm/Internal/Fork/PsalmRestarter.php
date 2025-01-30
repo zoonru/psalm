@@ -15,7 +15,6 @@ use function defined;
 use function extension_loaded;
 use function file_get_contents;
 use function file_put_contents;
-use function function_exists;
 use function implode;
 use function in_array;
 use function ini_get;

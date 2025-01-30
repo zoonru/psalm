@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Psalm\Internal\Cli;
 
-use AssertionError;
 use Composer\Autoload\ClassLoader;
 use Fidry\CpuCoreCounter\CpuCoreCounter;
 use Psalm\Config;
@@ -76,7 +75,6 @@ use function parse_url;
 use function preg_match;
 use function preg_replace;
 use function realpath;
-use function register_shutdown_function;
 use function setlocale;
 use function sort;
 use function str_repeat;
