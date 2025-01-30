@@ -289,11 +289,7 @@ final class CliUtils
             if (str_starts_with($input_path, '--') && strlen($input_path) > 2) {
                 // ignore --config psalm.xml
                 // ignore common phpunit args that accept a class instead of a path, as this can cause issues on Windows
-                $ignored_arguments = array(
-                    'config',
-                    'printer',
-                    'root',
-                );
+                $ignored_arguments = ['config', 'printer', 'root'];
 
                 if (in_array(substr($input_path, 2), $ignored_arguments, true)) {
                     ++$i;
@@ -521,14 +517,15 @@ final class CliUtils
             || isset($_SERVER['JENKINS_URL'])
             || isset($_SERVER['SCRUTINIZER'])
             || isset($_SERVER['GITLAB_CI'])
+            || isset($_SERVER['CI'])
             || isset($_SERVER['GITHUB_WORKFLOW'])
             || isset($_SERVER['DRONE']);
     }
 
     public static function checkRuntimeRequirements(): void
     {
-        $required_php_version = 7_04_00;
-        $required_php_version_text = '7.4.0';
+        $required_php_version = 8_01_17;
+        $required_php_version_text = '8.1.17';
 
         // the following list was taken from vendor/composer/platform_check.php
         // It includes both Psalm's requirements (from composer.json) and the
@@ -555,7 +552,7 @@ final class CliUtils
 
         $missing_extensions = array_filter(
             $required_extensions,
-            static fn(string $ext) => !extension_loaded($ext)
+            static fn(string $ext) => !extension_loaded($ext),
         );
 
         if ($missing_extensions) {

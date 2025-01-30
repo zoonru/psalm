@@ -6,23 +6,23 @@ Psalm supports a wide range of docblock annotations.
 
 Psalm uses the following PHPDoc tags to understand your code:
 
-- [`@var`](https://docs.phpdoc.org/latest/guide/references/phpdoc/tags/var.html)
+- [`@var`](https://docs.phpdoc.org/guide/references/phpdoc/tags/var.html)
   Used for specifying the types of properties and variables
-- [`@return`](https://docs.phpdoc.org/latest/guide/references/phpdoc/tags/return.html)
+- [`@return`](https://docs.phpdoc.org/guide/references/phpdoc/tags/return.html)
   Used for specifying the return types of functions, methods and closures
-- [`@param`](https://docs.phpdoc.org/latest/guide/references/phpdoc/tags/param.html)
+- [`@param`](https://docs.phpdoc.org/guide/references/phpdoc/tags/param.html)
   Used for specifying types of parameters passed to functions, methods and closures
-- [`@property`](https://docs.phpdoc.org/latest/guide/references/phpdoc/tags/property.html)
+- [`@property`](https://docs.phpdoc.org/guide/references/phpdoc/tags/property.html)
   Used to specify what properties can be accessed on an object that uses `__get` and `__set`
-- [`@property-read`](https://docs.phpdoc.org/latest/guide/references/phpdoc/tags/property.html)
+- [`@property-read`](https://docs.phpdoc.org/guide/references/phpdoc/tags/property.html)
   Used to specify what properties can be read on object that uses `__get`
-- [`@property-write`](https://docs.phpdoc.org/latest/guide/references/phpdoc/tags/property.html)
+- [`@property-write`](https://docs.phpdoc.org/guide/references/phpdoc/tags/property.html)
   Used to specify what properties can be written on object that uses `__set`
-- [`@method`](https://docs.phpdoc.org/latest/guide/references/phpdoc/tags/method.html)
+- [`@method`](https://docs.phpdoc.org/guide/references/phpdoc/tags/method.html)
   Used to specify which magic methods are available on object that uses `__call`.
-- [`@deprecated`](https://docs.phpdoc.org/latest/guide/references/phpdoc/tags/deprecated.html)
+- [`@deprecated`](https://docs.phpdoc.org/guide/references/phpdoc/tags/deprecated.html)
   Used to mark functions, methods, classes and interfaces as being deprecated
-- [`@internal`](https://docs.phpdoc.org/latest/guide/references/phpdoc/tags/internal.html)
+- [`@internal`](https://docs.phpdoc.org/guide/references/phpdoc/tags/internal.html)
    Used to mark classes, functions and properties that are internal to an application or library.
 - [`@mixin`](#mixins)
     Used to tell Psalm that the current class proxies the methods and properties of the referenced class.
@@ -252,9 +252,10 @@ $b = $a->bar(); // this call fails
 
 ### `@psalm-internal`
 
-Used to mark a class, property or function as internal to a given namespace. Psalm treats this slightly differently to
-the PHPDoc `@internal` tag. For `@internal`, an issue is raised if the calling code is in a namespace completely
-unrelated to the namespace of the calling code, i.e. not sharing the first element of the namespace.
+Used to mark a class, property or function as internal to a given namespace or class or even method. 
+Psalm treats this slightly differently to the PHPDoc `@internal` tag. For `@internal`,
+an issue is raised if the calling code is in a namespace completely unrelated to the namespace of the calling code,
+i.e. not sharing the first element of the namespace.
 
 In contrast for `@psalm-internal`, the docblock line must specify a namespace. An issue is raised if the calling code
 is not within the given namespace.
@@ -272,7 +273,15 @@ namespace A\B {
 namespace A\B\C {
     class Bat {
         public function batBat(): void {
-            $a = new \A\B\Foo();  // this is fine
+            $a = new \A\B\Foo(); // this is fine
+        }
+    }
+}
+
+namespace A {
+    class B {
+        public function batBat(): void {
+            $a = new \A\B\Foo(); // this is fine
         }
     }
 }
@@ -280,7 +289,28 @@ namespace A\B\C {
 namespace A\C {
     class Bat {
         public function batBat(): void {
-            $a = new \A\B\Foo();  // error
+            $a = new \A\B\Foo(); // error
+        }
+    }
+}
+
+namespace X {
+    class Foo {        
+        /**
+         * @psalm-internal Y\Bat::batBat
+         */
+        public static function barBar(): void {
+        }
+    }
+}
+
+namespace Y {
+    class Bat {
+        public function batBat() : void {
+            \X\Foo::barBar(); // this is fine
+        }
+        public function fooFoo(): void {
+            \X\Foo::barBar(); // error
         }
     }
 }
@@ -755,6 +785,6 @@ class BazClass extends BaseClass {} // this is an error
 
 ## Type Syntax
 
-Psalm supports PHPDoc’s [type syntax](https://docs.phpdoc.org/latest/guide/guides/types.html), and also the [proposed PHPDoc PSR type syntax](https://github.com/php-fig/fig-standards/blob/master/proposed/phpdoc.md#appendix-a-types).
+Psalm supports PHPDoc’s [type syntax](https://docs.phpdoc.org/guide/guides/types.html), and also the [proposed PHPDoc PSR type syntax](https://github.com/php-fig/fig-standards/blob/master/proposed/phpdoc.md#appendix-a-types).
 
 A detailed write-up is found in [Typing in Psalm](typing_in_psalm.md)

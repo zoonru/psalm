@@ -663,7 +663,7 @@ class TypeAnnotationTest extends TestCase
                     '$output===' => 'list<1|2>',
                 ],
             ],
-            'callableWithReturnTypeTypeAliasWithinBackets' => [
+            'callableWithReturnTypeTypeAliasWithinBrackets' => [
                 'code' => '<?php
                     /** @psalm-type TCallback (callable():int) */
                     class Foo {
@@ -937,6 +937,22 @@ class TypeAnnotationTest extends TestCase
                          * @psalm-param Foo $foo
                          */
                         public function bar(array $foo): void {}
+                    }
+                PHP,
+            ],
+            'typeWithMultipleSpaces' => [
+                'code' => <<<'PHP'
+                    <?php
+                    /**
+                     * @psalm-type Foo      =     string
+                     * @psalm-type Bar           int
+                     */
+                    class A {
+                        /**
+                         * @psalm-param Foo $foo
+                         * @psalm-param Bar $bar
+                         */
+                        public function bar(string $foo, int $bar): void {}
                     }
                 PHP,
             ],

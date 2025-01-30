@@ -679,7 +679,7 @@ class ConditionalReturnTypeTest extends TestCase
                     '$expect_mixed_from_literal' => 'mixed',
                 ],
             ],
-            'isArryCheckOnTemplate' => [
+            'isArrayCheckOnTemplate' => [
                 'code' => '<?php
                     /**
                      * @template TResult as string|list<string>
@@ -786,7 +786,7 @@ class ConditionalReturnTypeTest extends TestCase
                          * @template TSource as self::SOURCE_*
                          * @param TSource $source
                          * @return (TSource is "BODY" ? object|list : array)
-                         * @psalm-taint-source
+                         * @psalm-taint-source input
                          */
                         public function getParams(
                             string $source = self::SOURCE_GET
@@ -1010,6 +1010,34 @@ class ConditionalReturnTypeTest extends TestCase
                 ],
                 'ignored_issues' => [],
                 'php_version' => '8.1',
+            ],
+            'nonEmptyLiteralString' => [
+                'code' => '<?php
+                    /**
+                     * @param literal-string $string
+                     * @psalm-return ($string is non-empty-literal-string ? string : int)
+                     */
+                    function getSomething(string $string)
+                    {
+                        if (!$string) {
+                            return 1;
+                        }
+
+                        return "";
+                    }
+
+                    /** @var literal-string $literalString */
+                    $literalString;
+                    $something = getSomething($literalString);
+                    /** @var non-empty-literal-string $nonEmptyliteralString */
+                    $nonEmptyliteralString;
+                    $something2 = getSomething($nonEmptyliteralString);
+                ',
+                'assertions' => [
+                    '$something' => 'int|string',
+                    '$something2' => 'string',
+                ],
+                'ignored_issues' => [],
             ],
         ];
     }

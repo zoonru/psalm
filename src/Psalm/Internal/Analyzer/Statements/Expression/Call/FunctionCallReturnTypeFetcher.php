@@ -39,6 +39,7 @@ use Psalm\Type\Atomic\TNamedObject;
 use Psalm\Type\Atomic\TNonEmptyArray;
 use Psalm\Type\Atomic\TNull;
 use Psalm\Type\Atomic\TString;
+use Psalm\Type\TaintKind;
 use Psalm\Type\Union;
 use UnexpectedValueException;
 
@@ -48,6 +49,7 @@ use function count;
 use function explode;
 use function in_array;
 use function str_contains;
+use function str_ends_with;
 use function strlen;
 use function strtolower;
 use function substr;
@@ -636,14 +638,14 @@ final class FunctionCallReturnTypeFetcher
                         $pattern = trim($pattern);
                         if ($pattern[0] === '['
                             && $pattern[1] === '^'
-                            && substr($pattern, -1) === ']'
+                            && str_ends_with($pattern, ']')
                         ) {
                             $pattern = substr($pattern, 2, -1);
 
                             if (self::simpleExclusion($pattern, $first_arg_value[0])) {
-                                $removed_taints[] = 'html';
-                                $removed_taints[] = 'has_quotes';
-                                $removed_taints[] = 'sql';
+                                $removed_taints[] = TaintKind::INPUT_HTML;
+                                $removed_taints[] = TaintKind::INPUT_HAS_QUOTES;
+                                $removed_taints[] = TaintKind::INPUT_SQL;
                             }
                         }
                     }

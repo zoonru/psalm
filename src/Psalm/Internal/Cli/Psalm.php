@@ -6,6 +6,7 @@ namespace Psalm\Internal\Cli;
 
 use AssertionError;
 use Composer\Autoload\ClassLoader;
+use Fidry\CpuCoreCounter\CpuCoreCounter;
 use Psalm\Config;
 use Psalm\Config\Creator;
 use Psalm\ErrorBaseline;
@@ -34,11 +35,14 @@ use Psalm\Progress\Progress;
 use Psalm\Progress\VoidProgress;
 use Psalm\Report;
 use Psalm\Report\ReportOptions;
+use ReflectionClass;
 use RuntimeException;
 use Symfony\Component\Filesystem\Path;
+use Throwable;
 
 use function array_filter;
 use function array_key_exists;
+use function array_keys;
 use function array_map;
 use function array_merge;
 use function array_slice;
@@ -49,6 +53,7 @@ use function count;
 use function defined;
 use function extension_loaded;
 use function file_exists;
+use function file_get_contents;
 use function file_put_contents;
 use function function_exists;
 use function fwrite;
@@ -66,22 +71,27 @@ use function is_string;
 use function json_encode;
 use function max;
 use function microtime;
+use function opcache_get_status;
 use function parse_url;
 use function preg_match;
 use function preg_replace;
 use function realpath;
 use function register_shutdown_function;
 use function setlocale;
+use function sort;
 use function str_repeat;
 use function str_starts_with;
 use function strlen;
 use function substr;
+use function trim;
+use function wordwrap;
 
 use const DIRECTORY_SEPARATOR;
 use const JSON_THROW_ON_ERROR;
 use const LC_CTYPE;
 use const PHP_EOL;
 use const PHP_URL_SCHEME;
+use const PHP_VERSION_ID;
 use const STDERR;
 
 // phpcs:disable PSR1.Files.SideEffects
@@ -91,6 +101,7 @@ require_once __DIR__ . '/../CliUtils.php';
 require_once __DIR__ . '/../Composer.php';
 require_once __DIR__ . '/../IncludeCollector.php';
 require_once __DIR__ . '/../../IssueBuffer.php';
+require_once __DIR__ . '/../../Report.php';
 
 /**
  * @internal
@@ -127,6 +138,7 @@ final class Psalm
         'memory-limit:',
         'monochrome',
         'no-diff',
+        'force-jit',
         'no-cache',
         'no-reflection-cache',
         'no-file-cache',
@@ -140,6 +152,7 @@ final class Psalm
         'show-snippet:',
         'stats',
         'threads:',
+        'scan-threads:',
         'update-baseline',
         'use-baseline:',
         'use-ini-defaults',
@@ -230,7 +243,7 @@ final class Psalm
             // we ignore the FQN because of a hack in scoper.inc that needs full path
             // phpcs:ignore SlevomatCodingStandard.Namespaces.ReferenceUsedNamesOnly.ReferenceViaFullyQualifiedName
             static fn(): ?\Composer\Autoload\ClassLoader =>
-                CliUtils::requireAutoloaders($current_dir, isset($options['r']), $vendor_dir)
+                CliUtils::requireAutoloaders($current_dir, isset($options['r']), $vendor_dir),
         );
 
         $run_taint_analysis = self::shouldRunTaintAnalysis($options);
@@ -265,11 +278,12 @@ final class Psalm
             $options['long-progress'] = true;
         }
 
-        $threads = self::detectThreads($options, $config, $in_ci);
+        $threads = self::getThreads($options, $config, $in_ci, false);
+        $scanThreads = self::getThreads($options, $config, $in_ci, true);
 
         $progress = self::initProgress($options, $config, $in_ci);
 
-        self::restart($options, $threads, $progress);
+        self::restart($options, $threads, $scanThreads, $progress);
 
         if (isset($options['debug-emitted-issues'])) {
             $config->debug_emitted_issues = true;
@@ -347,6 +361,7 @@ final class Psalm
                     : true,
             ),
             $threads,
+            $scanThreads,
             $progress,
         );
 
@@ -404,6 +419,41 @@ final class Psalm
         } else {
             self::autoGenerateConfig($project_analyzer, $current_dir, $init_source_dir, $vendor_dir);
         }
+    }
+
+    /** @return int<1, max> */
+    public static function getThreads(array $options, Config $config, bool $in_ci, bool $for_scan): int
+    {
+        if (defined('PHP_WINDOWS_VERSION_MAJOR')) {
+            // No support desired for Windows at the moment
+            return 1;
+        } elseif (!extension_loaded('pcntl')) {
+            // Psalm requires pcntl for multi-threads support
+            return 1;
+        }
+
+        if ($for_scan) {
+            if (isset($options['scanThreads'])) {
+                $threads = max(1, (int)$options['scanThreads']);
+            } elseif (isset($options['debug']) || $in_ci) {
+                $threads = 1;
+            } elseif ($config->scan_threads) {
+                $threads = $config->scan_threads;
+            } else {
+                $threads = max(1, (new CpuCoreCounter())->getCount());
+            }
+        } else {
+            if (isset($options['threads'])) {
+                $threads = max(1, (int)$options['threads']);
+            } elseif (isset($options['debug']) || $in_ci) {
+                $threads = 1;
+            } elseif ($config->threads) {
+                $threads = $config->threads;
+            } else {
+                $threads = max(1, (new CpuCoreCounter())->getCount());
+            }
+        }
+        return $threads;
     }
 
     private static function initOutputFormat(array $options): string
@@ -505,7 +555,7 @@ final class Psalm
                 && $arg !== '--debug-emitted-issues'
                 && !str_starts_with($arg, '--disable-extension=')
                 && !str_starts_with($arg, '--root=')
-                && !str_starts_with($arg, '--r=')
+                && !str_starts_with($arg, '--r='),
         ));
 
         $init_level = null;
@@ -874,7 +924,7 @@ final class Psalm
         return $current_dir;
     }
 
-    private static function restart(array $options, int $threads, Progress $progress): void
+    private static function restart(array $options, int $threads, int $scanThreads, Progress $progress): void
     {
         $ini_handler = new PsalmRestarter('PSALM');
 
@@ -891,7 +941,7 @@ final class Psalm
             }
         }
 
-        if ($threads > 1
+        if (($threads > 1 || $scanThreads > 1)
             && extension_loaded('grpc')
             && (ini_get('grpc.enable_fork_support') === '1' && ini_get('grpc.poll_strategy') === 'epoll1') === false
         ) {
@@ -906,57 +956,78 @@ final class Psalm
 
         $ini_handler->disableExtensions([
             'uopz',
-            // extesions that are incompatible with JIT (they are also usually make Psalm slow)
+            // extensions that are incompatible with JIT (they are also usually make Psalm slow)
             'pcov',
             'blackfire',
         ]);
 
-        if (defined('PHP_WINDOWS_VERSION_MAJOR')) {
+        $skipJit = defined('PHP_WINDOWS_VERSION_MAJOR') && PHP_VERSION_ID < PsalmRestarter::MIN_PHP_VERSION_WINDOWS_JIT;
+        if ($skipJit) {
             $ini_handler->disableExtensions(['opcache', 'Zend OPcache']);
         }
 
         // If Xdebug is enabled, restart without it
         $ini_handler->check();
 
-        if (!getenv('PSALM_ALLOW_XDEBUG')) {
-            if (!function_exists('opcache_get_status')
-                || !opcache_get_status(false)
-                || !opcache_get_status(false)['jit']['on']
-            ) {
-                throw new AssertionError('The opcache extension could not be enabled!');
+        $hasJit = false;
+        if (function_exists('opcache_get_status')) {
+            if (true === (opcache_get_status()['jit']['on'] ?? false)) {
+                $hasJit = true;
+                $progress->write(PHP_EOL
+                    . 'JIT acceleration: ON'
+                    . PHP_EOL . PHP_EOL);
+            } else {
+                $progress->write(PHP_EOL
+                    . 'JIT acceleration: OFF (an error occurred while enabling JIT)' . PHP_EOL
+                    . 'Please report this to https://github.com/vimeo/psalm with your OS and PHP configuration!'
+                    . PHP_EOL . PHP_EOL);
             }
-
-            register_shutdown_function(function (): void {
-                $status = opcache_get_status(false);
-            
-                if ($status["memory_usage"]["free_memory"] < 10*1024*1024) {
-                    throw new AssertionError("Not enough free opcache memory!");
-                }
-                if ($status["interned_strings_usage"]["free_memory"] < 1*1024*1024) {
-                    throw new AssertionError("Not enough free interned strings memory!");
-                }
-                if ($status["jit"]["buffer_free"] < 10*1024*1024) {
-                    throw new AssertionError("Not enough free JIT memory!");
-                }
-                if (!$status["jit"]["on"]) {
-                    throw new AssertionError("JIT is not enabled!");
-                }
-            });
-        }
-    }
-
-    private static function detectThreads(array $options, Config $config, bool $in_ci): int
-    {
-        if (isset($options['threads'])) {
-            $threads = (int)$options['threads'];
-        } elseif (isset($options['debug']) || $in_ci) {
-            $threads = 1;
-        } elseif ($config->threads) {
-            $threads = $config->threads;
         } else {
-            $threads = max(1, ProjectAnalyzer::getCpuCount() - 1);
+            if ($skipJit) {
+                $progress->write(PHP_EOL
+                    . 'JIT acceleration: OFF (disabled on Windows and PHP < 8.4)' . PHP_EOL
+                    . 'Install PHP 8.4+ to make use of JIT on Windows for a 20%+ performance boost!'
+                    . PHP_EOL . PHP_EOL);
+            } else {
+                $progress->write(PHP_EOL
+                    . 'JIT acceleration: OFF (opcache not installed or not enabled)' . PHP_EOL
+                    . 'Install and enable the opcache extension to make use of JIT for a 20%+ performance boost!'
+                    . PHP_EOL . PHP_EOL);
+            }
         }
-        return $threads;
+        if (isset($options['force-jit']) && !$hasJit) {
+            $progress->write('Exiting because JIT was requested but is not available.' . PHP_EOL . PHP_EOL);
+            exit(1);
+        }
+
+        $overcommit = null;
+        try {
+            /** @psalm-suppress RiskyTruthyFalsyComparison */
+            $overcommit = trim(file_get_contents('/proc/sys/vm/overcommit_memory') ?: '');
+        } catch (Throwable) {
+        }
+
+        if ($overcommit === '2') {
+            $err = 'ERROR: VM overcommiting is disabled.' . PHP_EOL . PHP_EOL
+                . "TL;DR: to fix, run these two commands:" . PHP_EOL . PHP_EOL
+                . "echo 1 | sudo tee /proc/sys/vm/overcommit_memory" . PHP_EOL
+                . "echo vm.overcommit_memory=1 | sudo tee /etc/sysctl.d/40-psalm.conf   # For persistence" . PHP_EOL
+                . PHP_EOL
+                . "Explanation: disabling VM overcommitting *WILL* cause failures when running Psalm "
+                . "in multithreaded mode during analysis," . PHP_EOL
+                . 'as Psalm relies very heavily on the copy-on-write semantics of fork(), which are currently disabled.'
+                . PHP_EOL . PHP_EOL . PHP_EOL
+                . "Please enable VM overcommitting to greatly speed up Psalm and avoid crashes in multithreaded mode."
+                . PHP_EOL . PHP_EOL . PHP_EOL
+                . "This warning may be ignored by setting the PSALM_IGNORE_NO_OVERCOMMIT=1 environment variable "
+                . "(not recommended)."
+                . PHP_EOL . PHP_EOL;
+            
+            fwrite(STDERR, $err);
+            if (getenv('PSALM_IGNORE_NO_OVERCOMMIT') !== '1') {
+                exit(1);
+            }
+        }
     }
 
     /** @psalm-suppress UnusedParam $argv is being reported as unused */
@@ -1254,6 +1325,22 @@ final class Psalm
      */
     private static function getHelpText(): string
     {
+        $formats = [];
+        /** @var string $value */
+        foreach ((new ReflectionClass(Report::class))->getConstants() as $constant => $value) {
+            if (str_starts_with($constant, 'TYPE_')) {
+                $formats[] = $value;
+            }
+        }
+        sort($formats);
+        $outputFormats = wordwrap(implode(', ', $formats), 75, "\n            ");
+
+        /** @psalm-suppress ImpureMethodCall */
+        $reports = array_keys(Report::getMapping());
+        sort($reports);
+        $reportFormats = wordwrap('"' . implode('", "', $reports) . '"', 75, "\n        ");
+
+        // phpcs:disable Generic.Files.LineLength.TooLong
         return <<<HELP
         Usage:
             psalm [options] [file...]
@@ -1271,8 +1358,14 @@ final class Psalm
             --disable-extension=[extension]
                 Used to disable certain extensions while Psalm is running.
 
+            --force-jit
+                If set, requires JIT acceleration to be available in order to run Psalm, exiting immediately if it cannot be enabled.
+
             --threads=INT
-                If greater than one, Psalm will run analysis on multiple threads, speeding things up.
+                If greater than one, Psalm will run the scan and analysis on multiple threads, speeding things up.
+
+            --scan-threads=INT
+                If greater than one, Psalm will run the scan on multiple threads, speeding things up (if specified, takes priority over the --threads flag).
 
             --no-diff
                 Turns off Psalm’s diff mode, checks all files regardless of whether they’ve changed.
@@ -1339,8 +1432,8 @@ final class Psalm
 
             --output-format=console
                 Changes the output format.
-                Available formats: compact, console, text, emacs, json, pylint, xml, checkstyle, junit, sonarqube,
-                                   github, phpstorm, codeclimate, by-issue-level
+                Available formats:
+                    $outputFormats
 
             --no-progress
                 Disable the progress indicator
@@ -1354,8 +1447,7 @@ final class Psalm
         Reports:
             --report=PATH
                 The path where to output report file. The output format is based on the file extension.
-                (Currently supported formats: ".json", ".xml", ".txt", ".emacs", ".pylint", ".console",
-                ".sarif", "checkstyle.xml", "sonarqube.json", "codeclimate.json", "summary.json", "junit.xml")
+                (Currently supported formats: $reportFormats)
 
             --report-show-info[=BOOLEAN]
                 Whether the report should include non-errors in its output (defaults to true)
@@ -1417,5 +1509,6 @@ final class Psalm
                 Run Psalm Language Server
 
         HELP;
+        // phpcs:enable
     }
 }

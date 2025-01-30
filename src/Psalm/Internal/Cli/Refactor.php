@@ -38,9 +38,7 @@ use function implode;
 use function in_array;
 use function ini_set;
 use function is_array;
-use function is_numeric;
 use function is_string;
-use function max;
 use function microtime;
 use function preg_last_error_msg;
 use function preg_replace;
@@ -83,7 +81,7 @@ final class Refactor
         $valid_short_options = ['f:', 'm', 'h', 'r:', 'c:'];
         $valid_long_options = [
             'help', 'debug', 'debug-by-line', 'debug-emitted-issues', 'config:', 'root:',
-            'threads:', 'move:', 'into:', 'rename:', 'to:',
+            'scan-threads:', 'threads:', 'move:', 'into:', 'rename:', 'to:',
         ];
 
         // get options from command line
@@ -199,7 +197,7 @@ final class Refactor
             // we ignore the FQN because of a hack in scoper.inc that needs full path
             // phpcs:ignore SlevomatCodingStandard.Namespaces.ReferenceUsedNamesOnly.ReferenceViaFullyQualifiedName
             static fn(): ?\Composer\Autoload\ClassLoader =>
-                CliUtils::requireAutoloaders($current_dir, isset($options['r']), $vendor_dir)
+                CliUtils::requireAutoloaders($current_dir, isset($options['r']), $vendor_dir),
         );
 
         // If Xdebug is enabled, restart without it
@@ -310,9 +308,10 @@ final class Refactor
             chdir($current_dir);
         }
 
-        $threads = isset($options['threads']) && is_numeric($options['threads'])
-            ? (int)$options['threads']
-            : max(1, ProjectAnalyzer::getCpuCount() - 2);
+        $in_ci = CliUtils::runningInCI();
+
+        $threads = Psalm::getThreads($options, $config, $in_ci, false);
+        $scanThreads = Psalm::getThreads($options, $config, $in_ci, true);
 
         $providers = new Providers(
             new FileProvider(),
@@ -338,6 +337,7 @@ final class Refactor
             new ReportOptions(),
             [],
             $threads,
+            $scanThreads,
             $progress,
         );
 

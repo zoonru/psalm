@@ -687,8 +687,21 @@ class TKeyedArray extends Atomic
             }
 
             if (preg_match('/^-?[1-9][0-9]*$/', $name)
-                && (string)(int) $name !== $name // overflow occured
+                && (string)(int) $name !== $name // overflow occurred
             ) {
+                $quote = true;
+            }
+
+            if (preg_match('/^[1-9][0-9]*_([0-9]+_)*[0-9]+$/', $name)) {
+                $quote = true;
+            }
+
+            // 08 should be quoted since it's numeric but it's handled as string and not cast to int
+            if (preg_match('/^0[0-9]+$/', $name)) {
+                $quote = true;
+            }
+
+            if (preg_match('/^[0-9]+e-?[0-9]+$/', $name)) {
                 $quote = true;
             }
 

@@ -92,6 +92,36 @@ class AssertAnnotationTest extends TestCase
         $this->analyzeFile('somefile.php', new Context());
     }
 
+    public function testAssertsAlongCallStaticMethodWork(): void
+    {
+        $this->addFile(
+            'somefile.php',
+            '<?php
+
+            class ImportedAssert
+            {
+                /** @psalm-assert non-empty-string $b */
+                public static function notEmptyStrOnly(string $b): void
+                {
+                    if ("" === $b) throw new \Exception("");
+                }
+
+                public function __callStatic() {}
+            }
+
+            /** @return non-empty-string */
+            function returnNonEmpty(string $b): string
+            {
+                ImportedAssert::notEmptyStrOnly($b);
+
+                return $b;
+            }
+            ',
+        );
+
+        $this->analyzeFile('somefile.php', new Context());
+    }
+
     public function testAssertInvalidDocblockMessageDoesNotIncludeTrace(): void
     {
         $this->expectException(CodeException::class);
@@ -122,7 +152,7 @@ class AssertAnnotationTest extends TestCase
     public function providerValidCodeParse(): iterable
     {
         return [
-            'implictAssertInstanceOfB' => [
+            'implicitAssertInstanceOfB' => [
                 'code' => '<?php
                     namespace Bar;
 
@@ -221,7 +251,7 @@ class AssertAnnotationTest extends TestCase
                         return $s;
                     }',
             ],
-            'implictAssertInstanceOfInterface' => [
+            'implicitAssertInstanceOfInterface' => [
                 'code' => '<?php
                     namespace Bar;
 

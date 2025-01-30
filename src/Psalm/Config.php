@@ -86,6 +86,7 @@ use function json_decode;
 use function libxml_clear_errors;
 use function libxml_get_errors;
 use function libxml_use_internal_errors;
+use function max;
 use function mkdir;
 use function phpversion;
 use function preg_match;
@@ -99,6 +100,7 @@ use function scandir;
 use function sha1;
 use function simplexml_import_dom;
 use function str_contains;
+use function str_ends_with;
 use function str_replace;
 use function str_starts_with;
 use function strlen;
@@ -131,8 +133,12 @@ use const SCANDIR_SORT_NONE;
  */
 final class Config
 {
-    private const DEFAULT_FILE_NAME = 'psalm.xml';
     final public const DEFAULT_BASELINE_NAME = 'psalm-baseline.xml';
+    private const DEFAULT_FILE_NAMES = [
+        'psalm.xml',
+        'psalm.xml.dist',
+        'psalm.dist.xml',
+    ];
     final public const CONFIG_NAMESPACE = 'https://getpsalm.org/schema/config';
     final public const REPORT_INFO = 'info';
     final public const REPORT_ERROR = 'error';
@@ -458,7 +464,10 @@ final class Config
      */
     public array $internal_stubs = [];
 
+    /** @var ?int<1, max> */
     public ?int $threads = null;
+    /** @var ?int<1, max> */
+    public ?int $scan_threads = null;
 
     /**
      * A list of php extensions supported by Psalm.
@@ -471,7 +480,9 @@ final class Config
      * @psalm-readonly-allow-private-mutation
      * @var array<string, bool|null>
      */
+
     public array $php_extensions = [
+        "amqp" => null,
         "apcu" => null,
         "decimal" => null,
         "dom" => null,
@@ -620,10 +631,10 @@ final class Config
         }
 
         do {
-            $maybe_path = $dir_path . DIRECTORY_SEPARATOR . self::DEFAULT_FILE_NAME;
-
-            if (file_exists($maybe_path) || file_exists($maybe_path .= '.dist')) {
-                return $maybe_path;
+            foreach (self::DEFAULT_FILE_NAMES as $defaultFileName) {
+                if (file_exists($maybe_path = $dir_path . DIRECTORY_SEPARATOR . $defaultFileName)) {
+                    return $maybe_path;
+                }
             }
 
             $dir_path = dirname($dir_path);
@@ -1163,13 +1174,13 @@ final class Config
         }
 
         if ($paths_to_check !== null) {
-            $paths_to_add_to_project_files = array();
+            $paths_to_add_to_project_files = [];
             foreach ($paths_to_check as $path) {
                 // if we have an .xml arg here, the files passed are invalid
                 // valid cases (in which we don't want to add CLI passed files to projectFiles though)
                 // are e.g. if running phpunit tests for psalm itself
-                if (substr($path, -4) === '.xml') {
-                    $paths_to_add_to_project_files = array();
+                if (str_ends_with($path, '.xml')) {
+                    $paths_to_add_to_project_files = [];
                     break;
                 }
 
@@ -1192,14 +1203,14 @@ final class Config
                 $paths_to_add_to_project_files[] = $prospective_path;
             }
 
-            if ($paths_to_add_to_project_files !== array() && !isset($config_xml->projectFiles)) {
+            if ($paths_to_add_to_project_files !== [] && !isset($config_xml->projectFiles)) {
                 if ($config_xml === null) {
                     $config_xml = new SimpleXMLElement('<psalm/>');
                 }
                 $config_xml->addChild('projectFiles');
             }
 
-            if ($paths_to_add_to_project_files !== array() && isset($config_xml->projectFiles)) {
+            if ($paths_to_add_to_project_files !== [] && isset($config_xml->projectFiles)) {
                 foreach ($paths_to_add_to_project_files as $path) {
                     if (is_dir($path)) {
                         $child = $config_xml->projectFiles->addChild('directory');
@@ -1372,7 +1383,12 @@ final class Config
         }
 
         if (isset($config_xml['threads'])) {
-            $config->threads = (int)$config_xml['threads'];
+            $config->threads = max(1, (int)$config_xml['threads']);
+            $config->scan_threads = $config->threads;
+        }
+
+        if (isset($config_xml['scanThreads'])) {
+            $config->scan_threads = max(1, (int)$config_xml['scanThreads']);
         }
 
         return $config;
@@ -2197,6 +2213,10 @@ final class Config
 
         foreach ($stub_files as $file_path) {
             $file_path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $file_path);
+            // fix mangled phar paths on Windows
+            if (str_starts_with($file_path, 'phar:\\\\')) {
+                $file_path = 'phar://'. substr($file_path, 7);
+            }
             $codebase->scanner->addFileToDeepScan($file_path);
         }
 
@@ -2282,6 +2302,10 @@ final class Config
 
         foreach ($stub_files as $file_path) {
             $file_path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $file_path);
+            // fix mangled phar paths on Windows
+            if (str_starts_with($file_path, 'phar:\\\\')) {
+                $file_path = 'phar://' . substr($file_path, 7);
+            }
             $codebase->scanner->addFileToDeepScan($file_path);
         }
 
@@ -2413,9 +2437,7 @@ final class Config
             // as they might be autoloadable once we require the autoloader below
             $codebase->classlikes->forgetMissingClassLikes();
 
-            $this->include_collector->runAndCollect(
-                $this->requireAutoloader(...),
-            );
+            $this->include_collector->runAndCollect($this->requireAutoloader(...));
         }
 
         $this->collectPredefinedConstants();
@@ -2632,8 +2654,22 @@ final class Config
                 $version_parser = new VersionParser();
 
                 $constraint = $version_parser->parseConstraints($php_version);
+                $php_versions = [
+                    '5.4',
+                    '5.5',
+                    '5.6',
+                    '7.0',
+                    '7.1',
+                    '7.2',
+                    '7.3',
+                    '7.4',
+                    '8.0',
+                    '8.1',
+                    '8.2',
+                    '8.3',
+                ];
 
-                foreach (['5.4', '5.5', '5.6', '7.0', '7.1', '7.2', '7.3', '7.4', '8.0', '8.1'] as $candidate) {
+                foreach ($php_versions as $candidate) {
                     if ($constraint->matches(new Constraint('<=', "$candidate.0.0-dev"))
                         || $constraint->matches(new Constraint('<=', "$candidate.999"))
                     ) {

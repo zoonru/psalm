@@ -70,6 +70,36 @@ class OverrideTest extends TestCase
                 'ignored_issues' => [],
                 'php_version' => '8.3',
             ],
+            'canBeUsedOnPureMethods' => [
+                'code' => <<<'PHP'
+                    <?php
+                    class A {
+                        /** @psalm-pure */
+                        public function f(): void {}
+                    }
+                    class B extends A {
+                        /** @psalm-pure */
+                        #[Override]
+                        public function f(): void {}
+                    }
+                    PHP,
+                'assertions' => [],
+                'ignored_issues' => [],
+                'php_version' => '8.3',
+            ],
+            'ignoreImplicitStringable' => [
+                'code' => '
+                    <?php
+                    class A {
+                        public function __toString(): string {
+                            return "";
+                        }
+                    }
+                ',
+                'assertions' => [],
+                'ignored_issues' => [],
+                'php_version' => '8.3',
+            ],
         ];
     }
 
@@ -172,6 +202,19 @@ class OverrideTest extends TestCase
                     }
                 ',
                 'error_message' => 'InvalidOverride',
+                'error_levels' => [],
+                'php_version' => '8.3',
+            ],
+            'explicitStringable' => [
+                'code' => '
+                    <?php
+                    class A implements Stringable {
+                        public function __toString(): string {
+                            return "";
+                        }
+                    }
+                ',
+                'error_message' => 'MissingOverrideAttribute',
                 'error_levels' => [],
                 'php_version' => '8.3',
             ],

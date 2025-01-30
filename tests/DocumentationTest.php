@@ -320,6 +320,7 @@ class DocumentationTest extends TestCase
 
                 case 'InvalidOverride':
                 case 'MissingOverrideAttribute':
+                case 'MissingClassConstType':
                     $php_version = '8.3';
                     break;
             }
@@ -353,7 +354,7 @@ class DocumentationTest extends TestCase
 
         $duplicate_shortcodes = array_filter(
             $all_shortcodes,
-            static fn($issues): bool => count($issues) > 1
+            static fn($issues): bool => count($issues) > 1,
         );
 
         $this->assertEquals(

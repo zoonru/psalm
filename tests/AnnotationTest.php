@@ -494,7 +494,7 @@ class AnnotationTest extends TestCase
 
                     $arr["a"]();',
             ],
-            'multipeLineGenericArray' => [
+            'multipleLineGenericArray' => [
                 'code' => '<?php
                     /**
                      * @psalm-type MiddlewareArray = array<
@@ -515,7 +515,7 @@ class AnnotationTest extends TestCase
                      */
                     class A {}',
             ],
-            'multipeLineGenericArray2' => [
+            'multipleLineGenericArray2' => [
                 'code' => '<?php
                     /**
                      * @psalm-type TRelAlternate =
@@ -534,8 +534,47 @@ class AnnotationTest extends TestCase
                     $_ = (new A)->ret();
                 ',
                 'assertions' => [
-                    '$_===' => 'list<array{href: string, lang: string}>'
+                    '$_===' => 'list<array{href: string, lang: string}>',
                 ],
+            ],
+            'invalidPsalmForMethodShouldNotBreakDocblock' => [
+                'code' => '<?php
+                    class A {
+                        /**
+                         * @psalm-impure
+                         * @param string $arg
+                         * @return non-falsy-string
+                         */
+                        public function foo($arg) {
+                            return $arg . "bar";
+                        }
+                    }
+
+                    $a = new A();
+                    $_ = $a->foo("hello");
+                ',
+                'assertions' => [
+                    '$_===' => 'non-falsy-string',
+                ],
+                'ignored_issues' => ['InvalidDocblock'],
+            ],
+            'invalidPsalmForFunctionShouldNotBreakDocblock' => [
+                'code' => '<?php
+                    /**
+                     * @psalm-impure
+                     * @param string $arg
+                     * @return non-falsy-string
+                     */
+                    function foo($arg) {
+                        return $arg . "bar";
+                    }
+
+                    $_ = foo("hello");
+                ',
+                'assertions' => [
+                    '$_===' => 'non-falsy-string',
+                ],
+                'ignored_issues' => ['InvalidDocblock'],
             ],
             'builtInClassInAShape' => [
                 'code' => '<?php
@@ -1401,6 +1440,16 @@ class AnnotationTest extends TestCase
                     class Foo {}',
                 'assertions' => [],
             ],
+            'sinceTagNonPhpVersion' => [
+                'code' => '<?php
+                    class Foo {
+                        /**
+                         * @since 8.9.9
+                         */
+                        public function bar() : void {
+                        }
+                    };',
+            ],
         ];
     }
 
@@ -1648,6 +1697,16 @@ class AnnotationTest extends TestCase
                     }
                     ',
                 'error_message' => 'UndefinedDocblockClass',
+            ],
+            'invalidTaintEscapeAnnotation' => [
+                'code' => '<?php
+                    /**
+                     * @psalm-taint-escape
+                     */
+                    function takesInt(int $i): int {
+                        return $i;
+                    }',
+                'error_message' => 'InvalidDocblock',
             ],
             'noPhpStormAnnotationsThankYou' => [
                 'code' => '<?php

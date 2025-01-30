@@ -6,12 +6,14 @@ namespace Psalm\Tests;
 
 use Psalm\Context;
 use Psalm\Tests\Traits\InvalidCodeAnalysisTestTrait;
+use Psalm\Tests\Traits\InvalidCodeAnalysisWithIssuesTestTrait;
 use Psalm\Tests\Traits\ValidCodeAnalysisTestTrait;
 
 use const DIRECTORY_SEPARATOR;
 
 class MethodCallTest extends TestCase
 {
+    use InvalidCodeAnalysisWithIssuesTestTrait;
     use InvalidCodeAnalysisTestTrait;
     use ValidCodeAnalysisTestTrait;
 
@@ -880,7 +882,7 @@ class MethodCallTest extends TestCase
             ],
             'dateTimeSecondArg' => [
                 'code' => '<?php
-                    $date = new DateTime(null, new DateTimeZone("Pacific/Nauru"));
+                    $date = new DateTime("now", new DateTimeZone("Pacific/Nauru"));
                     echo $date->format("Y-m-d H:i:sP") . "\n";',
             ],
             'noCrashOnGetClassMethodCallWithNull' => [
@@ -1161,9 +1163,9 @@ class MethodCallTest extends TestCase
 
                     class Datetime extends \DateTime
                     {
-                        public static function createFromInterface(\DateTimeInterface $datetime): static
+                        public static function createFromInterface(\DateTimeInterface $object): static
                         {
-                            return parent::createFromInterface($datetime);
+                            return parent::createFromInterface($object);
                         }
                     }',
                 'assertions' => [],
@@ -1823,6 +1825,22 @@ class MethodCallTest extends TestCase
                     $a = new stdClass(5);
                 PHP,
                 'error_message' => 'TooManyArguments',
+            ],
+            'firstClassCallableWithUnknownStaticMethod' => [
+                'code' => <<<'PHP'
+                    <?php
+                    class A {}
+                    $_a = A::foo(...);
+                PHP,
+                'error_message' => 'UndefinedMethod',
+            ],
+            'firstClassCallableWithUnknownInstanceMethod' => [
+                'code' => <<<'PHP'
+                    <?php
+                    class A {}
+                    $_a = (new A)->foo(...);
+                PHP,
+                'error_message' => 'UndefinedMethod',
             ],
         ];
     }

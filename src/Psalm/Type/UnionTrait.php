@@ -62,7 +62,7 @@ use const ARRAY_FILTER_USE_BOTH;
 trait UnionTrait
 {
     /**
-     * Constructs an Union instance
+     * Constructs a Union instance
      *
      * @psalm-external-mutation-free
      * @param non-empty-array<Atomic>     $types
@@ -382,7 +382,7 @@ trait UnionTrait
 
         return !array_filter(
             $types,
-            static fn($atomic_type): bool => !$atomic_type->canBeFullyExpressedInPhp($analysis_php_version_id)
+            static fn($atomic_type): bool => !$atomic_type->canBeFullyExpressedInPhp($analysis_php_version_id),
         );
     }
 
@@ -457,7 +457,7 @@ trait UnionTrait
     {
         return (bool)array_filter(
             $this->types,
-            static fn($type): bool => $type->hasArrayAccessInterface($codebase)
+            static fn($type): bool => $type->hasArrayAccessInterface($codebase),
         );
     }
 
@@ -748,7 +748,7 @@ trait UnionTrait
                         $type->extra_types,
                         static fn($t): bool => $t instanceof TTemplateParam,
                     )
-                )
+                ),
         );
     }
 
@@ -780,7 +780,7 @@ trait UnionTrait
                             )
                         )
                     )
-                )
+                ),
         );
     }
 
@@ -991,7 +991,7 @@ trait UnionTrait
                     || ($check_templates
                         && $type instanceof TTemplateParam
                         && $type->as->isInt()
-                    )
+                    ),
             ),
         ) === count($this->types);
     }
@@ -1022,7 +1022,7 @@ trait UnionTrait
                     || ($check_templates
                         && $type instanceof TTemplateParam
                         && $type->as->isString()
-                    )
+                    ),
             ),
         ) === count($this->types);
     }
@@ -1041,7 +1041,7 @@ trait UnionTrait
                     || ($check_templates
                         && $type instanceof TTemplateParam
                         && $type->as->isNonEmptyString()
-                    )
+                    ),
             ),
         ) === count($this->types);
     }
@@ -1245,7 +1245,7 @@ trait UnionTrait
 
     /**
      * @psalm-mutation-free
-     * @return bool true if this is a int literal with only one possible value
+     * @return bool true if this is an int literal with only one possible value
      */
     public function isSingleIntLiteral(): bool
     {

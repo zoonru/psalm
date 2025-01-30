@@ -56,7 +56,6 @@ use function dirname;
 use function explode;
 use function file_put_contents;
 use function fwrite;
-use function get_class;
 use function implode;
 use function in_array;
 use function is_dir;
@@ -266,7 +265,7 @@ final class IssueBuffer
         $project_analyzer = ProjectAnalyzer::getInstance();
         $codebase = $project_analyzer->getCodebase();
 
-        $fqcn_parts = explode('\\', get_class($e));
+        $fqcn_parts = explode('\\', $e::class);
         $issue_type = array_pop($fqcn_parts);
 
         if (!$project_analyzer->show_issues) {
@@ -575,7 +574,7 @@ final class IssueBuffer
                     $file_issues,
                     static fn(IssueData $d1, IssueData $d2): int => [$d1->file_path, $d1->line_from, $d1->column_from]
                         <=>
-                        [$d2->file_path, $d2->line_from, $d2->column_from]
+                        [$d2->file_path, $d2->line_from, $d2->column_from],
                 );
                 self::$issues_data[$file_path] = $file_issues;
             }
@@ -1112,5 +1111,13 @@ final class IssueBuffer
     final public static function captureServer(array $server): void
     {
         self::$server = $server;
+    }
+    /**
+     * @internal
+     * @return array<array-key,mixed>
+     */
+    final public static function getServer(): array
+    {
+        return self::$server;
     }
 }
